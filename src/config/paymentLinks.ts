@@ -1,19 +1,57 @@
-// PLANB-LANDING-01: uno de estos 9 links debe existir por cada precio del
-// catálogo (creados manualmente por el Project Owner en el dashboard de
-// Mercado Pago > Cobrar > Links de pago — no se generan desde código).
-// Mientras falten, la pantalla de confirmación cae al contacto de soporte.
-export const PAYMENT_LINKS_BY_PRICE: Record<number, string | null> = {
-  2500: null,
-  3400: null,
-  1500: null,
-  1700: null,
-  850: null,
-  350: null,
-  600: null,
-  250: null,
-  800: null,
+import type { Producto } from '../data/catalogo'
+
+// PLANB-LANDING-01: un link de pago simple de Mercado Pago por CONCEPTO
+// (10 en total — no por precio: Workout y Fotógrafo 1 día comparten precio
+// $350 pero son conceptos distintos). Los crea el Project Owner a mano en
+// el dashboard de Mercado Pago > Cobrar > Links de pago.
+export type PaymentGroupKey =
+  | 'DOBLES'
+  | 'RELAY'
+  | 'HALF_DOBLES'
+  | 'INDIVIDUAL'
+  | 'HALF_INDIVIDUAL'
+  | 'WORKOUT'
+  | 'PUB_1D'
+  | 'PUB_3D'
+  | 'FOT_1D'
+  | 'FOT_3D'
+
+export function getPaymentGroupKey(producto: Producto): PaymentGroupKey {
+  switch (producto.tipo) {
+    case 'Dobles':
+      return 'DOBLES'
+    case 'Relay':
+      return 'RELAY'
+    case '½ Hybrid Dobles':
+      return 'HALF_DOBLES'
+    case '½ Hybrid Individual':
+      return 'HALF_INDIVIDUAL'
+    case 'Individual':
+      return 'INDIVIDUAL'
+    case 'Workout Experience':
+      return 'WORKOUT'
+    case 'Público':
+      return producto.dia === 'Vie-Dom' ? 'PUB_3D' : 'PUB_1D'
+    case 'Fotógrafo':
+      return producto.dia === 'Vie-Dom' ? 'FOT_3D' : 'FOT_1D'
+    default:
+      throw new Error(`Sin concepto de pago mapeado para tipo "${producto.tipo}"`)
+  }
 }
 
-export function getPaymentLinkForPrice(precio: number): string | null {
-  return PAYMENT_LINKS_BY_PRICE[precio] ?? null
+export const PAYMENT_LINKS_BY_GROUP: Record<PaymentGroupKey, string | null> = {
+  DOBLES: 'https://mpago.la/2kTWKG1',
+  RELAY: 'https://mpago.la/18qHAEK',
+  HALF_DOBLES: 'https://mpago.la/24FhZYN',
+  INDIVIDUAL: 'https://mpago.la/2cJ8rH5',
+  HALF_INDIVIDUAL: 'https://mpago.la/32dUChz',
+  WORKOUT: 'https://mpago.la/1sf1rQb',
+  PUB_1D: 'https://mpago.la/1vSSuK1',
+  PUB_3D: 'https://mpago.la/1J9EGt1',
+  FOT_1D: 'https://mpago.la/1F6NEJz',
+  FOT_3D: 'https://mpago.la/1rFvYXm',
+}
+
+export function getPaymentLinkForProducto(producto: Producto): string | null {
+  return PAYMENT_LINKS_BY_GROUP[getPaymentGroupKey(producto)] ?? null
 }

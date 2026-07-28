@@ -6,7 +6,7 @@ import RouteMetadata from '../components/RouteMetadata'
 import { CATALOGO, formatPrecio } from '../data/catalogo'
 import { submitInscripcion } from '../api/inscripciones'
 import { generateQrTicket } from '../lib/qrTicket'
-import { getPaymentLinkForPrice } from '../config/paymentLinks'
+import { getPaymentLinkForProducto } from '../config/paymentLinks'
 import { getSupportWhatsAppUrl } from '../config/supportConfig'
 
 type ViewState =
@@ -102,7 +102,7 @@ export default function InscribirPage() {
   }
 
   if (view.kind === 'done') {
-    const paymentLink = getPaymentLinkForPrice(producto.precio)
+    const paymentLink = getPaymentLinkForProducto(producto)
     const whatsappUrl = getSupportWhatsAppUrl(
       `Hola, acabo de registrarme para ${producto.nombre} (${formatPrecio(producto.precio)}) y necesito el link de pago.`,
     )
