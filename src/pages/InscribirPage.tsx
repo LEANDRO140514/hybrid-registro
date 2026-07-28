@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Box, Button, Card, CardContent, Container, Stack, TextField, Typography } from '@mui/material'
-import { Link, useSearch } from '@tanstack/react-router'
+import { Box, Button, Card, CardContent, Container, IconButton, Stack, TextField, Typography } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { Link, useRouter, useSearch } from '@tanstack/react-router'
 import RouteMetadata from '../components/RouteMetadata'
 import { CATALOGO, formatPrecio } from '../data/catalogo'
 import { submitInscripcion } from '../api/inscripciones'
@@ -22,6 +23,15 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export default function InscribirPage() {
   const search = useSearch({ from: '/inscribir' })
   const producto = useMemo(() => CATALOGO.find((p) => p.code === search.cat), [search.cat])
+  const router = useRouter()
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.history.back()
+    } else {
+      void router.navigate({ to: '/' })
+    }
+  }
 
   const [view, setView] = useState<ViewState>({ kind: 'form' })
   const [contactName, setContactName] = useState('')
@@ -42,6 +52,9 @@ export default function InscribirPage() {
           path="/inscribir"
         />
         <Container maxWidth="sm">
+          <IconButton onClick={handleBack} aria-label="Volver" sx={{ color: '#E6F2B1', borderRadius: 0, mb: 1 }}>
+            <ArrowBackIcon />
+          </IconButton>
           <Stack spacing={3} sx={{ alignItems: 'center', textAlign: 'center' }}>
             <Typography component="h1" variant="h4" sx={{ fontWeight: 900 }}>
               No encontramos esta categoría
@@ -165,7 +178,6 @@ export default function InscribirPage() {
                 href={`data:application/pdf;base64,${view.pdfBase64}`}
                 download="hybrid-experience-boleto.pdf"
                 variant="outlined"
-                sx={{ color: 'rgba(255,255,255,0.85)' }}
               >
                 Descargar boleto en PDF
               </Button>
@@ -219,6 +231,9 @@ export default function InscribirPage() {
         path="/inscribir"
       />
       <Container maxWidth="sm">
+        <IconButton onClick={handleBack} aria-label="Volver" sx={{ color: '#E6F2B1', borderRadius: 0, mb: 1 }}>
+          <ArrowBackIcon />
+        </IconButton>
         <Card>
           <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
             <Stack spacing={0.5} sx={{ mb: 3 }}>
@@ -232,6 +247,11 @@ export default function InscribirPage() {
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>
                 {formatPrecio(producto.precio)} · {producto.precioUnidad}
+              </Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', mt: 1 }}>
+                Llena tus datos{producto.integrantes > 1 ? ' y los de tu equipo' : ''}. Al continuar te
+                mostramos el link de pago de Mercado Pago para confirmar tu lugar, y te enviamos tu
+                boleto (QR + PDF) por correo.
               </Typography>
             </Stack>
 

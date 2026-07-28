@@ -96,6 +96,16 @@ interface FaqItem {
 
 const FAQ_DATA: FaqItem[] = [
   {
+    question: '¿Cómo me inscribo y pago?',
+    answer:
+      'Da clic en "Inscribirse" en tu categoría, llena tus datos de contacto (si es Dobles o Relay, agrega también el nombre de tus compañeros de equipo) y continúa. Te mostramos el link de pago de Mercado Pago correspondiente a tu categoría — complétalo ahí para confirmar tu lugar.',
+  },
+  {
+    question: '¿Cómo recibo mi boleto?',
+    answer:
+      'Al enviar tu registro, en pantalla y por correo recibes tu código QR y un boleto en PDF con tus datos. Muéstralo (digital o impreso) el día del evento.',
+  },
+  {
     question: '¿Nunca he competido, puedo participar?',
     answer:
       'Sí. Empieza con el Workout Experience (para probar) o el ½ Hybrid (para competir con volumen accesible). Ninguno de los dos requiere experiencia previa.',
