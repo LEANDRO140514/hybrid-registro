@@ -1,0 +1,75 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+build
+coverage
+.cache
+.vite
+.next
+
+# Test
+playwright-report
+test-results
+
+# Local tooling (agent-specific, not project-relevant)
+.claude/launch.json
+
+# Agent residues (non-institutional)
+.goose
+.cursor
+.forge
+.hermes
+.verdent
+.deepclaude
+.codeium
+.codex
+.copilot
+.roo
+.qwen
+.qoder
+.agent-browser
+.agents
+.augment
+.cagent
+.kilocode
+.trae
+.swt
+
+# Local InsForge metadata
+.insforge/
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.claude
+.cline
+.github/copilot*
+.windsurf
