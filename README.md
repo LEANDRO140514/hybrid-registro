@@ -62,18 +62,54 @@ encima de RLS).
 
 ### Ver / exportar los registros
 
+Ver todo en consola:
+
 ```bash
 npx @insforge/cli db query "select * from hybrid_registro_inscripciones order by created_at desc" --json
 ```
 
-Para exportar todo a CSV/JSON (por ejemplo, para migrarlo a Ready2Hybrid):
+Exportar completo a JSON (todas las columnas, para migrar a Ready2Hybrid):
 
 ```bash
 npx @insforge/cli db query "select * from hybrid_registro_inscripciones" --json > inscripciones.json
 ```
 
-O usa `npx @insforge/cli db` con las referencias de export/import del CLI si
-se necesita algo más estructurado.
+### Subir a un CRM (ej. GoHighLevel)
+
+El CLI de InsForge no exporta CSV directo, así que primero se trae ya
+aplanado a las columnas típicas de un import de contactos:
+
+```bash
+npx @insforge/cli db query "select contact_name as full_name, contact_email as email, contact_phone as phone, category_name, amount, status, created_at from hybrid_registro_inscripciones order by created_at desc" --json > inscripciones.json
+```
+
+Y se convierte ese JSON a CSV (el CLI envuelve las filas en `.rows`):
+
+```bash
+node -e "
+const data = require('./inscripciones.json').rows;
+const headers = Object.keys(data[0] ?? {});
+const csv = [headers.join(',')]
+  .concat(data.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(',')))
+  .join('\n');
+require('fs').writeFileSync('inscripciones.csv', csv);
+"
+```
+
+`inscripciones.csv` queda listo para **Contacts → Import** en GoHighLevel.
+Notas para el mapeo:
+
+- `full_name` es un solo campo (nombre completo del contacto principal, no
+  separado en nombre/apellido) — GHL permite mapear una sola columna a
+  "Full Name" en el import, o se puede partir a mano antes de subir.
+- `category_name`, `amount` y `status` son buenos candidatos para **custom
+  fields** o **tags** (por ejemplo, tag `pago-pendiente` vs `pagado` para
+  filtrar a quién darle seguimiento).
+- Este export solo trae al **contacto principal** de cada registro (quien
+  llenó el formulario), no a sus compañeros de equipo — `participants` (el
+  array completo) no está incluido aquí; si se necesita cada integrante
+  como su propio contacto en el CRM, es una transformación aparte sobre el
+  JSON completo (columna `participants` del export de arriba).
 
 ## Links de pago — por concepto, no por precio
 
