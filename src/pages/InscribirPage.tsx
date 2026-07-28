@@ -6,13 +6,15 @@ import RouteMetadata from '../components/RouteMetadata'
 import { CATALOGO, formatPrecio } from '../data/catalogo'
 import { submitInscripcion } from '../api/inscripciones'
 import { generateQrTicket } from '../lib/qrTicket'
+import { buildTicketPdfBase64 } from '../lib/registrationPdf'
+import { sendRegistrationEmail } from '../api/registrationEmail'
 import { getPaymentLinkForProducto } from '../config/paymentLinks'
 import { getSupportWhatsAppUrl } from '../config/supportConfig'
 
 type ViewState =
   | { kind: 'form' }
   | { kind: 'submitting' }
-  | { kind: 'done'; qrUrl: string | null }
+  | { kind: 'done'; qrUrl: string | null; pdfBase64: string | null }
   | { kind: 'error'; message: string }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -98,7 +100,26 @@ export default function InscribirPage() {
     }
 
     const qrUrl = await generateQrTicket({ registrationId, producto, participants, precio: producto.precio })
-    setView({ kind: 'done', qrUrl })
+    const amountLabel = `${formatPrecio(producto.precio)} · ${producto.precioUnidad}`
+    const pdfBase64 = buildTicketPdfBase64({
+      registrationId,
+      categoryName: producto.nombre,
+      amountLabel,
+      participants,
+      qrDataUrl: qrUrl,
+    })
+    setView({ kind: 'done', qrUrl, pdfBase64 })
+
+    void sendRegistrationEmail({
+      to: contactEmail.trim(),
+      contactName: contactName.trim(),
+      categoryName: producto.nombre,
+      amountLabel,
+      participants,
+      paymentLink: getPaymentLinkForProducto(producto),
+      qrDataUrl: qrUrl,
+      pdfBase64,
+    })
   }
 
   if (view.kind === 'done') {
@@ -136,6 +157,18 @@ export default function InscribirPage() {
                 alt="Código QR de tu registro"
                 sx={{ width: 220, height: 220, bgcolor: '#fff', p: 1 }}
               />
+            )}
+
+            {view.pdfBase64 && (
+              <Button
+                component="a"
+                href={`data:application/pdf;base64,${view.pdfBase64}`}
+                download="hybrid-experience-boleto.pdf"
+                variant="outlined"
+                sx={{ color: 'rgba(255,255,255,0.85)' }}
+              >
+                Descargar boleto en PDF
+              </Button>
             )}
 
             {paymentLink ? (
