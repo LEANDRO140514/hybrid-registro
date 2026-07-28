@@ -7,7 +7,7 @@ interface RouteMetadataProps {
   path: string
 }
 
-const CANONICAL_ORIGIN = 'https://hybrid-experience.enforma.mx'
+const CANONICAL_ORIGIN = 'https://hybrid-registro.enforma.mx'
 
 /**
  * Swaps document title/description/canonical/og:url (and their Twitter

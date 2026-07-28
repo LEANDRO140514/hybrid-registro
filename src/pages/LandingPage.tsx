@@ -35,7 +35,7 @@ const EVENT_JSON_LD = {
   name: eventConfig.name,
   description:
     'Vive HYBRID EXPERIENCE del 9 al 11 de octubre de 2026 en Mérida. Compite en Individual, Dobles o Relay, empieza con ½ Hybrid y Workout Experience, o compra tu acceso como público.',
-  url: 'https://hybrid-experience.enforma.mx/',
+  url: 'https://hybrid-registro.enforma.mx/',
   startDate: '2026-10-09T17:00:00-06:00',
   endDate: '2026-10-11',
   eventStatus: 'https://schema.org/EventScheduled',

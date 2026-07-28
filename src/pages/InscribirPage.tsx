@@ -5,10 +5,15 @@ import { Link, useSearch } from '@tanstack/react-router'
 import RouteMetadata from '../components/RouteMetadata'
 import { CATALOGO, formatPrecio } from '../data/catalogo'
 import { submitInscripcion } from '../api/inscripciones'
+import { generateQrTicket } from '../lib/qrTicket'
 import { getPaymentLinkForPrice } from '../config/paymentLinks'
 import { getSupportWhatsAppUrl } from '../config/supportConfig'
 
-type ViewState = { kind: 'form' } | { kind: 'submitting' } | { kind: 'done' } | { kind: 'error'; message: string }
+type ViewState =
+  | { kind: 'form' }
+  | { kind: 'submitting' }
+  | { kind: 'done'; qrUrl: string | null }
+  | { kind: 'error'; message: string }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -75,8 +80,10 @@ export default function InscribirPage() {
     }
 
     setView({ kind: 'submitting' })
+    const registrationId = crypto.randomUUID()
     const participants = [contactName.trim(), ...teammateNames.map((n) => n.trim())]
     const result = await submitInscripcion({
+      id: registrationId,
       producto,
       teamName: teammatesNeeded > 0 && teamName.trim() ? teamName.trim() : null,
       participants,
@@ -89,7 +96,9 @@ export default function InscribirPage() {
       setView({ kind: 'error', message: result.error ?? 'No pudimos guardar tu registro. Inténtalo de nuevo.' })
       return
     }
-    setView({ kind: 'done' })
+
+    const qrUrl = await generateQrTicket({ registrationId, producto, participants, precio: producto.precio })
+    setView({ kind: 'done', qrUrl })
   }
 
   if (view.kind === 'done') {
@@ -119,6 +128,15 @@ export default function InscribirPage() {
             <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
               {formatPrecio(producto.precio)} · {producto.precioUnidad}
             </Typography>
+
+            {view.qrUrl && (
+              <Box
+                component="img"
+                src={view.qrUrl}
+                alt="Código QR de tu registro"
+                sx={{ width: 220, height: 220, bgcolor: '#fff', p: 1 }}
+              />
+            )}
 
             {paymentLink ? (
               <>

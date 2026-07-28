@@ -2,7 +2,7 @@ export const DOMAINS = {
   // Web institucional de ENFORMA.
   corporate: import.meta.env.VITE_CORPORATE_DOMAIN || 'enforma.mx',
   // Landing pública de HYBRID EXPERIENCE — dominio canónico confirmado.
-  event: import.meta.env.VITE_EVENT_DOMAIN || 'hybrid-experience.enforma.mx',
+  event: import.meta.env.VITE_EVENT_DOMAIN || 'hybrid-registro.enforma.mx',
   // Futuro registro y compra pública en Ready2Hybrid. No usar app.enforma.mx para esto.
   registration: import.meta.env.VITE_REGISTRATION_DOMAIN || 'registro.enforma.mx',
   // Futuro panel operativo de Ready2Hybrid.
