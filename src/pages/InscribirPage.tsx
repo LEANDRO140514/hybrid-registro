@@ -15,7 +15,7 @@ import { getSupportWhatsAppUrl } from '../config/supportConfig'
 type ViewState =
   | { kind: 'form' }
   | { kind: 'submitting' }
-  | { kind: 'done'; qrUrl: string | null; pdfBase64: string | null }
+  | { kind: 'done'; qrUrl: string | null; pdfBase64: string | null; registrationId: string }
   | { kind: 'error'; message: string }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -121,7 +121,7 @@ export default function InscribirPage() {
       participants,
       qrDataUrl: qrUrl,
     })
-    setView({ kind: 'done', qrUrl, pdfBase64 })
+    setView({ kind: 'done', qrUrl, pdfBase64, registrationId })
 
     void sendRegistrationEmail({
       to: contactEmail.trim(),
@@ -137,8 +137,14 @@ export default function InscribirPage() {
 
   if (view.kind === 'done') {
     const paymentLink = getPaymentLinkForProducto(producto)
+    // Código corto derivado del UUID de la fila: permite ubicar el registro
+    // exacto desde el mensaje de WhatsApp (LIKE 'xxxxxxxx%' sobre id::text).
+    const inscriptionCode = `HEX-${view.registrationId.slice(0, 8).toUpperCase()}`
+    const paidWhatsappUrl = getSupportWhatsAppUrl(
+      `Hola, ya pagué mi inscripción a ${producto.nombre} (${formatPrecio(producto.precio)}). Mi código es ${inscriptionCode}. Nombre: ${contactName.trim()}.`,
+    )
     const whatsappUrl = getSupportWhatsAppUrl(
-      `Hola, acabo de registrarme para ${producto.nombre} (${formatPrecio(producto.precio)}) y necesito el link de pago.`,
+      `Hola, acabo de registrarme para ${producto.nombre} (${formatPrecio(producto.precio)}) y necesito el link de pago. Mi código es ${inscriptionCode}.`,
     )
 
     return (
@@ -199,6 +205,24 @@ export default function InscribirPage() {
                 >
                   Ir a pagar {formatPrecio(producto.precio)}
                 </Button>
+                {paidWhatsappUrl && (
+                  <>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
+                      Ya que pagues, avísanos por WhatsApp para confirmarte tu lugar. Tu código es{' '}
+                      <Box component="span" sx={{ color: '#fff', fontWeight: 600 }}>{inscriptionCode}</Box>.
+                    </Typography>
+                    <Button
+                      component="a"
+                      href={paidWhatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="outlined"
+                      size="large"
+                    >
+                      Ya pagué — avisar por WhatsApp
+                    </Button>
+                  </>
+                )}
               </>
             ) : (
               <>

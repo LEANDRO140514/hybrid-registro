@@ -1,3 +1,6 @@
+# Migration secrets (never commit)
+.env.migrate
+
 # Logs
 logs
 *.log
