@@ -10,5 +10,13 @@ if (dsn) {
     tracesSampleRate: 1.0,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
+    // Ruido de navegadores in-app (Facebook/Instagram/Messenger inyectan su
+    // propio puente window.webkit.messageHandlers al abrir links compartidos;
+    // en Android ese puente no existe y su script truena — no es nuestro bug).
+    ignoreErrors: [
+      /window\.webkit\.messageHandlers/,
+      'sendDataToNative',
+      'sendPageHideMessage',
+    ],
   })
 }
