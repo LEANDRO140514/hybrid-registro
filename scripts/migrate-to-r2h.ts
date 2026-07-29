@@ -295,7 +295,7 @@ async function migrateRow(
         name: row.team_name ?? row.participants.join(' & '),
         required_size: product.team_size,
         slots_complete: participantIds.length,
-        roster_state: 'COMPLETE',
+        roster_state: 'PAID_ROSTER_COMPLETE',
         payment_state: 'PAID',
       })
       .select('id')
@@ -310,9 +310,9 @@ async function migrateRow(
         .insert({
           team_id: teamId,
           position: i + 1,
-          role: i === 0 ? 'CAPTAIN' : 'MEMBER',
+          role: i === 0 ? 'CAPTAIN' : 'INVITEE',
           participant_id: participantIds[i],
-          state: 'CONFIRMED',
+          state: 'COMPLETE',
         })
         .select('id')
         .single()
@@ -333,7 +333,7 @@ async function migrateRow(
         product_id: product.id,
         product_code: product.code,
         participant_id: participantIds[i],
-        access_holder_id: participantIds[i],
+        access_holder_id: null,
         order_id: orderId,
         team_id: teamId,
         team_member_id: teamMemberIds[i] ?? null,
@@ -396,10 +396,11 @@ async function migrateRow(
 
   // ─── 9. activity_log ─────────────────────────────────────────────────────
   await r2h.database.from('activity_log').insert({
+    named_action: 'PLANB_MIGRATION',
     entity_type: 'order',
-    entity_id: orderId,
-    event_type: 'PLANB_MIGRATION',
-    payload: {
+    entity_ref: orderId,
+    result: 'OK',
+    sanitized_metadata: {
       planb_id: row.id,
       category_code: row.category_code,
       contact_name: row.contact_name,
