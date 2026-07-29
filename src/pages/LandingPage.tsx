@@ -97,13 +97,36 @@ interface FaqItem {
 const FAQ_DATA: FaqItem[] = [
   {
     question: '¿Cómo me inscribo y pago?',
-    answer:
-      'Da clic en "Inscribirse" en tu categoría, llena tus datos de contacto (si es Dobles o Relay, agrega también el nombre de tus compañeros de equipo) y continúa. Te mostramos el link de pago de Mercado Pago correspondiente a tu categoría — complétalo ahí para confirmar tu lugar.',
+    answer: (
+      <>
+        Da clic en "Inscribirse" en tu categoría, llena tus datos de contacto (si es Dobles o
+        Relay, agrega también a tus compañeros de equipo) y continúa. Te mostramos el link de pago
+        de Mercado Pago correspondiente a tu categoría — complétalo ahí.
+        <br />
+        <br />
+        <Box component="span" sx={{ color: '#fff', fontWeight: 700 }}>
+          Después de pagar, regresa a esa misma pantalla y toca "Ya pagué — avisar por WhatsApp",
+          enviando el código que te damos ahí.
+        </Box>{' '}
+        Sin ese aviso no podemos dar de alta tu registro, aunque ya hayas pagado.
+      </>
+    ),
   },
   {
     question: '¿Cómo recibo mi boleto?',
-    answer:
-      'Al enviar tu registro, en pantalla y por correo recibes tu código QR y un boleto en PDF con tus datos. Muéstralo (digital o impreso) el día del evento.',
+    answer: (
+      <>
+        Al enviar tu formulario, en pantalla y por correo recibes de inmediato tu código QR y un
+        boleto en PDF con tus datos y tu código de referencia.
+        <br />
+        <br />
+        Ese boleto es tu comprobante de registro, pero{' '}
+        <Box component="span" sx={{ color: '#fff', fontWeight: 700 }}>
+          tu lugar solo queda confirmado cuando nos avisas por WhatsApp que ya pagaste
+        </Box>
+        , usando el código de tu boleto.
+      </>
+    ),
   },
   {
     question: '¿Nunca he competido, puedo participar?',
@@ -540,7 +563,7 @@ function ProductCard({ producto, accentColor = '#E6F2B1' }: ProductCardProps) {
           variant="caption"
           sx={{
             color: 'rgba(255,255,255,0.65)',
-            fontSize: '0.75rem',
+            fontSize: '0.85rem',
             mb: producto.incluyeChip ? 0.5 : 1.5,
             fontFamily: "'Space Grotesk', sans-serif",
           }}
