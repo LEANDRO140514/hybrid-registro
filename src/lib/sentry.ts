@@ -17,6 +17,10 @@ if (dsn) {
       /window\.webkit\.messageHandlers/,
       'sendDataToNative',
       'sendPageHideMessage',
+      // Falla conocida entre el propio tracing de Sentry (browserTracingIntegration,
+      // que usa performance.mark/measure) y ciertos navegadores Chromium/Electron —
+      // no tiene relación con el código de la app.
+      /Failed to execute 'measure' on 'Performance'/,
     ],
   })
 }
