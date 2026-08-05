@@ -40,11 +40,13 @@ export function getPaymentGroupKey(producto: Producto): PaymentGroupKey {
 }
 
 export const PAYMENT_LINKS_BY_GROUP: Record<PaymentGroupKey, string | null> = {
-  DOBLES: 'https://mpago.la/2kTWKG1',
-  RELAY: 'https://mpago.la/18qHAEK',
-  HALF_DOBLES: 'https://mpago.la/24FhZYN',
-  INDIVIDUAL: 'https://mpago.la/2cJ8rH5',
-  HALF_INDIVIDUAL: 'https://mpago.la/32dUChz',
+  // 3 MSI — regenerados para HEX-PRICING-STAGES-01 (precio de etapa "lanzamiento")
+  DOBLES: 'https://mpago.li/11GKwpC',
+  RELAY: 'https://mpago.li/19uewoa',
+  HALF_DOBLES: 'https://mpago.li/2AJspLC',
+  INDIVIDUAL: 'https://mpago.li/2zPb2NR',
+  HALF_INDIVIDUAL: 'https://mpago.li/167XRtU',
+  // Precio fijo, sin cambio entre etapas — links originales
   WORKOUT: 'https://mpago.la/1sf1rQb',
   PUB_1D: 'https://mpago.la/1vSSuK1',
   PUB_3D: 'https://mpago.la/1J9EGt1',

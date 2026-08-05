@@ -23,8 +23,9 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import BoltIcon from '@mui/icons-material/Bolt'
 import InstagramIcon from '@mui/icons-material/Instagram'
 import { useCountdown } from '../hooks/useCountdown'
-import { CATALOGO, porBloque, formatPrecio } from '../data/catalogo'
-import type { Producto } from '../data/catalogo'
+import { CATALOGO, porBloque, formatPrecio, getPrecioParaEtapa } from '../data/catalogo'
+import type { Producto, EtapaComercial } from '../data/catalogo'
+import { resolveEtapaComercial } from '../config/pricingStage'
 import { DOMAINS } from '../config'
 import { eventConfig } from '../config/eventConfig'
 import { SALES_CONFIG } from '../config/salesConfig'
@@ -459,10 +460,11 @@ const TRES_DIAS: TresDiasItem[] = [
 
 interface ProductCardProps {
   producto: Producto
+  etapaActual: EtapaComercial
   accentColor?: string
 }
 
-function ProductCard({ producto, accentColor = '#E6F2B1' }: ProductCardProps) {
+function ProductCard({ producto, etapaActual, accentColor = '#E6F2B1' }: ProductCardProps) {
   const navigate = useNavigate()
   const imageUrl = PRODUCT_IMAGES[producto.code] || IMG_WORKOUT
   const isOpen = SALES_CONFIG.status === 'open'
@@ -557,7 +559,7 @@ function ProductCard({ producto, accentColor = '#E6F2B1' }: ProductCardProps) {
             letterSpacing: '0.02em',
           }}
         >
-          {formatPrecio(producto.precio)}
+          {formatPrecio(getPrecioParaEtapa(producto, etapaActual))}
         </Typography>
         <Typography
           variant="caption"
@@ -570,6 +572,22 @@ function ProductCard({ producto, accentColor = '#E6F2B1' }: ProductCardProps) {
         >
           {producto.precioUnidad}
         </Typography>
+        {producto.msi && (
+          <Chip
+            label="3 MSI"
+            size="small"
+            sx={{
+              mb: 1,
+              fontSize: '0.6rem',
+              height: 18,
+              borderRadius: 0,
+              fontWeight: 700,
+              bgcolor: 'transparent',
+              border: `1px solid ${accentColor}66`,
+              color: accentColor,
+            }}
+          />
+        )}
         {producto.incluyeChip && (
           <Typography
             variant="caption"
@@ -665,6 +683,164 @@ const WORKOUT_PRODUCTS = CATALOGO.filter((p) => p.tipo === 'Workout Experience')
 const PUBLICO_PRODUCTS = CATALOGO.filter((p) => p.tipo === 'Público')
 const FOTOGRAFO_PRODUCTS = CATALOGO.filter((p) => p.tipo === 'Fotógrafo')
 
+// ── Precios por etapa: un producto representativo por categoría ────
+// (los productos hermanos de la misma categoría comparten precio, ver catalogo.ts)
+interface PricingTableRow {
+  categoria: string
+  producto: Producto
+}
+
+const COMPITE_PRICING_REPS: PricingTableRow[] = [
+  { categoria: 'Individual', producto: CATALOGO.find((p) => p.code === 'IND-H')! },
+  { categoria: 'Dobles', producto: CATALOGO.find((p) => p.code === 'DOB-VIE-MM')! },
+  { categoria: 'Relay', producto: CATALOGO.find((p) => p.code === 'REL-4H')! },
+]
+
+const EXPERIENCE_PRICING_REPS: PricingTableRow[] = [
+  { categoria: '½ Hybrid Individual', producto: CATALOGO.find((p) => p.code === 'HALF-IND-M')! },
+  { categoria: '½ Hybrid Dobles', producto: CATALOGO.find((p) => p.code === 'HALF-DOB-MM')! },
+]
+
+interface PrizeRow {
+  lugar: string
+  premio: number
+}
+
+const PRO_PRIZES: PrizeRow[] = [
+  { lugar: '1°', premio: 7000 },
+  { lugar: '2°', premio: 5000 },
+  { lugar: '3°', premio: 3000 },
+]
+
+const OPEN_PRIZES: PrizeRow[] = [
+  { lugar: '1°', premio: 5000 },
+  { lugar: '2°', premio: 3500 },
+  { lugar: '3°', premio: 2000 },
+]
+
+const BENEFICIOS_EXPERIENCIA = [
+  'Kit oficial del evento.',
+  'Chip de cronometraje.',
+  'Seguro para competidores.',
+  'Asistencia médica durante el evento.',
+  'Zona de recovery y experiencias wellness.',
+  'Las instalaciones de Club Cumbres, el escenario donde la comunidad HYBRID EXPERIENCE se reúne para desafiar sus propios límites.',
+]
+
+function StagePriceCell({ precio, integrantes }: { precio: number; integrantes: number }) {
+  return (
+    <Box>
+      <Box component="span" sx={{ fontWeight: 700 }}>
+        {formatPrecio(precio)}
+      </Box>
+      {integrantes > 1 && (
+        <Box component="span" sx={{ display: 'block', fontSize: '0.7rem', color: 'text.secondary' }}>
+          {formatPrecio(Math.round(precio / integrantes))} c/u
+        </Box>
+      )}
+    </Box>
+  )
+}
+
+function PricingStageTable({ rows, accentColor = '#E6F2B1' }: { rows: PricingTableRow[]; accentColor?: string }) {
+  return (
+    <Box
+      component="table"
+      sx={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        fontFamily: "'Space Grotesk', sans-serif",
+        '& th, & td': {
+          textAlign: 'center',
+          py: 1.25,
+          px: 1,
+          borderBottom: '1px solid rgba(230,242,177,0.12)',
+          fontSize: { xs: '0.75rem', sm: '0.9rem' },
+        },
+        '& th': {
+          color: accentColor,
+          fontWeight: 700,
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          fontSize: { xs: '0.6rem', sm: '0.7rem' },
+        },
+        '& td': { color: 'rgba(255,255,255,0.85)' },
+        '& td:first-of-type': { textAlign: 'left', fontWeight: 700, color: '#fff' },
+      }}
+    >
+      <thead>
+        <tr>
+          <th>Categoría</th>
+          <th>Lanzamiento</th>
+          <th>Preventa</th>
+          <th>Regular</th>
+          <th>MSI</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.categoria}>
+            <td>{row.categoria}</td>
+            <td><StagePriceCell precio={getPrecioParaEtapa(row.producto, 'lanzamiento')} integrantes={row.producto.integrantes} /></td>
+            <td><StagePriceCell precio={getPrecioParaEtapa(row.producto, 'preventa')} integrantes={row.producto.integrantes} /></td>
+            <td><StagePriceCell precio={getPrecioParaEtapa(row.producto, 'regular')} integrantes={row.producto.integrantes} /></td>
+            <td>{row.producto.msi ? '✓ 3 MSI' : '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </Box>
+  )
+}
+
+function PrizeTable({ title, rows, accentColor = '#E6F2B1' }: { title: string; rows: PrizeRow[]; accentColor?: string }) {
+  return (
+    <Box sx={{ flex: 1, minWidth: 220 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          display: 'block',
+          textAlign: 'center',
+          color: accentColor,
+          fontWeight: 700,
+          letterSpacing: '0.15em',
+          fontSize: '0.75rem',
+          mb: 1.5,
+          fontFamily: "'Space Grotesk', sans-serif",
+        }}
+      >
+        {title}
+      </Typography>
+      <Box
+        component="table"
+        sx={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontFamily: "'Space Grotesk', sans-serif",
+          '& td': {
+            textAlign: 'center',
+            py: 1,
+            px: 1,
+            borderBottom: '1px solid rgba(230,242,177,0.12)',
+            fontSize: '0.9rem',
+            color: 'rgba(255,255,255,0.85)',
+          },
+          '& td:first-of-type': { textAlign: 'left', fontWeight: 700, color: accentColor },
+          '& td:last-of-type': { textAlign: 'right', fontWeight: 700, color: '#fff' },
+        }}
+      >
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.lugar}>
+              <td>{row.lugar}</td>
+              <td>{formatPrecio(row.premio)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Box>
+    </Box>
+  )
+}
+
 function SectionHeading({ label, color = '#E6F2B1' }: { label: string; color?: string }) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 1 }}>
@@ -721,10 +897,13 @@ function Navbar() {
     { label: 'INICIO', href: '#hero' },
     { label: 'EXPERIENCE', href: '#experience' },
     { label: 'FORMATOS', href: '#formatos' },
+    { label: 'PRECIOS', href: '#precios' },
     { label: 'COMPITE', href: '#compite' },
+    { label: 'PREMIOS', href: '#premios' },
     { label: 'ASISTE', href: '#asiste' },
-    { label: 'PREPARACIÓN', href: '#preparacion' },
     { label: 'UBICACIÓN', href: '#ubicacion' },
+    { label: 'PREPARACIÓN', href: '#preparacion' },
+    { label: 'COMUNIDAD', href: '#comunidad' },
     { label: 'FAQ', href: '#faq' },
   ]
 
@@ -738,7 +917,7 @@ function Navbar() {
         borderBottom: '1px solid rgba(230,242,177,0.12)',
       }}
     >
-      <Container maxWidth="lg" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1.5, px: 2 }}>
+      <Container maxWidth="lg" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, py: 1.5, px: 2 }}>
         <Typography
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           sx={{
@@ -750,13 +929,14 @@ function Navbar() {
             cursor: 'pointer',
             userSelect: 'none',
             whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           HYBRID EXPERIENCE
         </Typography>
 
         {/* Desktop links */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2.5 }}>
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, alignItems: 'center', gap: 1.5, minWidth: 0 }}>
           {links.map((link) => (
             <Typography
               key={link.label}
@@ -764,11 +944,12 @@ function Navbar() {
               href={link.href}
               sx={{
                 fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '0.75rem',
+                fontSize: '0.68rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.04em',
                 color: 'rgba(255,255,255,0.6)',
                 textDecoration: 'none',
+                whiteSpace: 'nowrap',
                 cursor: 'pointer',
                 transition: 'color 150ms',
                 '&:hover': { color: '#E6F2B1' },
@@ -782,9 +963,9 @@ function Navbar() {
             onClick={() => window.open(`https://${DOMAINS.shop}`, '_blank')}
             sx={{
               fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '0.7rem',
+              fontSize: '0.68rem',
               fontWeight: 700,
-              letterSpacing: '0.1em',
+              letterSpacing: '0.08em',
               color: '#000000',
               bgcolor: '#E6F2B1',
               borderRadius: 0,
@@ -792,6 +973,7 @@ function Navbar() {
               px: 1.5,
               minHeight: 0,
               minWidth: 0,
+              flexShrink: 0,
               lineHeight: 1.2,
               '&:hover': { bgcolor: '#F0F7CD' },
             }}
@@ -804,7 +986,7 @@ function Navbar() {
         <IconButton
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-          sx={{ display: { xs: 'flex', md: 'none' }, color: '#E6F2B1', borderRadius: 0 }}
+          sx={{ display: { xs: 'flex', lg: 'none' }, color: '#E6F2B1', borderRadius: 0, flexShrink: 0 }}
         >
           {menuOpen ? <CloseIcon /> : <MenuIcon />}
         </IconButton>
@@ -1012,6 +1194,7 @@ function SalesStatusBanner() {
 }
 
 export default function LandingPage() {
+  const etapaActual = resolveEtapaComercial()
   const targetDate = useMemo(() => new Date('2026-10-09T17:00:00'), [])
   const timeLeft = useCountdown(targetDate)
   const [desafioTab, setDesafioTab] = useState(0)
@@ -1413,7 +1596,7 @@ export default function LandingPage() {
               <Grid container spacing={2} sx={{ flex: 1, justifyContent: 'center' }}>
                 {WORKOUT_PRODUCTS.map((producto) => (
                   <Grid size={{ xs: 6 }} key={producto.code}>
-                    <ProductCard producto={producto} />
+                    <ProductCard producto={producto} etapaActual={etapaActual} />
                   </Grid>
                 ))}
               </Grid>
@@ -1469,7 +1652,7 @@ export default function LandingPage() {
             <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
               {HALF_HYBRID_PRODUCTS.map((producto) => (
                 <Grid size={{ xs: 6, sm: 4 }} key={producto.code}>
-                  <ProductCard producto={producto} />
+                  <ProductCard producto={producto} etapaActual={etapaActual} />
                 </Grid>
               ))}
             </Grid>
@@ -2155,6 +2338,135 @@ export default function LandingPage() {
         </Container>
       </Box>
 
+      {/* ===== PRECIOS SECTION ===== */}
+      <Box id="precios" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#111111' }}>
+        <Container maxWidth="md">
+          <SectionHeading label="PRECIOS" />
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: '#fff',
+              fontWeight: 700,
+              mb: 1,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Asegura tu lugar al mejor precio
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              mb: 5,
+              maxWidth: 560,
+              mx: 'auto',
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Cada etapa tiene un precio distinto. Al avanzar las etapas, el costo aumenta. Si ya
+            decidiste asistir, comprar antes significa pagar menos.
+          </Typography>
+
+          <Typography
+            variant="overline"
+            sx={{
+              display: 'block',
+              textAlign: 'center',
+              color: '#E6F2B1',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              fontSize: '0.75rem',
+              mb: 1.5,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            COMPITE
+          </Typography>
+          <Box sx={{ overflowX: 'auto', mb: 5 }}>
+            <PricingStageTable rows={COMPITE_PRICING_REPS} />
+          </Box>
+
+          <Typography
+            variant="overline"
+            sx={{
+              display: 'block',
+              textAlign: 'center',
+              color: '#E9C7DF',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              fontSize: '0.75rem',
+              mb: 1.5,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            EXPERIENCE
+          </Typography>
+          <Box sx={{ overflowX: 'auto', mb: 1.5 }}>
+            <PricingStageTable rows={EXPERIENCE_PRICING_REPS} accentColor="#E9C7DF" />
+          </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '0.85rem',
+              mb: 5,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            {`Workout Experience: ${formatPrecio(350)} — precio único durante todas las etapas, sin 3 MSI.`}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: '#E6F2B1',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              mb: 1,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            ✓ 3 meses sin intereses disponibles en categorías seleccionadas.
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '0.75rem',
+              mb: 4,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Los precios se actualizan conforme cambia cada etapa de venta.
+          </Typography>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              component="a"
+              href="#compite"
+              variant="outlined"
+              size="large"
+              sx={{
+                borderRadius: 0,
+                fontWeight: 700,
+                borderWidth: 2,
+                borderColor: '#E6F2B1',
+                color: '#E6F2B1',
+                fontFamily: "'Space Grotesk', sans-serif",
+                '&:hover': { borderWidth: 2, borderColor: '#E6F2B1', bgcolor: 'rgba(230,242,177,0.1)' },
+              }}
+            >
+              Ver categorías
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+
       {/* ===== COMPITE SECTION ===== */}
       <Box
         id="compite"
@@ -2195,7 +2507,7 @@ export default function LandingPage() {
                   fontFamily: "'Space Grotesk', sans-serif",
                 }}
               >
-                {`${DIA_FECHA[group.dia]} · ${SESION_LABEL[group.sesion] ?? group.sesion} · ${group.tipo.toUpperCase()} · ${formatPrecio(group.productos[0].precio)} ${group.precioUnidad}`}
+                {`${DIA_FECHA[group.dia]} · ${SESION_LABEL[group.sesion] ?? group.sesion} · ${group.tipo.toUpperCase()} · ${formatPrecio(getPrecioParaEtapa(group.productos[0], etapaActual))} ${group.precioUnidad}`}
               </Typography>
               {FORMATO_DESCRIPCIONES[group.tipo] && (
                 <Typography
@@ -2217,12 +2529,74 @@ export default function LandingPage() {
               <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
                 {group.productos.map((producto) => (
                   <Grid size={{ xs: 6, sm: 4, md: 3 }} key={producto.code}>
-                    <ProductCard producto={producto} />
+                    <ProductCard producto={producto} etapaActual={etapaActual} />
                   </Grid>
                 ))}
               </Grid>
             </Box>
           ))}
+        </Container>
+      </Box>
+
+      {/* ===== PREMIOS SECTION ===== */}
+      <Box
+        id="premios"
+        sx={{
+          py: { xs: 8, md: 12 },
+          background: 'linear-gradient(180deg, #000000 0%, rgba(230,242,177,0.04) 100%)',
+        }}
+      >
+        <Container maxWidth="md">
+          <SectionHeading label="PREMIOS" />
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: '#fff',
+              fontWeight: 700,
+              mb: 5,
+              maxWidth: 560,
+              mx: 'auto',
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Más de {formatPrecio(50000)} en premios en efectivo
+          </Typography>
+
+          <Typography
+            variant="overline"
+            sx={{
+              display: 'block',
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              fontSize: '0.7rem',
+              mb: 3,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Individual — podios independientes por género
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mb: 5 }}>
+            <PrizeTable title="PRO" rows={PRO_PRIZES} />
+            <PrizeTable title="OPEN" rows={OPEN_PRIZES} />
+          </Stack>
+
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '0.85rem',
+              maxWidth: 480,
+              mx: 'auto',
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Dobles, Relay, ½ Hybrid y Workout: reconocimiento y premios a los mejores tiempos por
+            categoría.
+          </Typography>
         </Container>
       </Box>
 
@@ -2276,7 +2650,7 @@ export default function LandingPage() {
             <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
               {PUBLICO_PRODUCTS.map((producto) => (
                 <Grid size={{ xs: 6, sm: 3 }} key={producto.code}>
-                  <ProductCard producto={producto} accentColor="#E9C7DF" />
+                  <ProductCard producto={producto} etapaActual={etapaActual} accentColor="#E9C7DF" />
                 </Grid>
               ))}
             </Grid>
@@ -2314,7 +2688,7 @@ export default function LandingPage() {
             <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
               {FOTOGRAFO_PRODUCTS.map((producto) => (
                 <Grid size={{ xs: 6, sm: 3 }} key={producto.code}>
-                  <ProductCard producto={producto} accentColor="#E9C7DF" />
+                  <ProductCard producto={producto} etapaActual={etapaActual} accentColor="#E9C7DF" />
                 </Grid>
               ))}
             </Grid>
@@ -2846,6 +3220,233 @@ export default function LandingPage() {
                 </Box>
               </AccordionDetails>
             </Accordion>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* ===== ¿POR QUÉ PERTENECES AQUÍ? SECTION ===== */}
+      <Box
+        id="comunidad"
+        sx={{
+          py: { xs: 8, md: 12 },
+          background: 'linear-gradient(180deg, #000000 0%, rgba(230,242,177,0.05) 50%, #000000 100%)',
+        }}
+      >
+        <Container maxWidth="md">
+          <SectionHeading label="COMUNIDAD" />
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: '#fff',
+              fontWeight: 700,
+              mb: 1,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            ¿Por qué perteneces aquí?
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              mb: 6,
+              maxWidth: 500,
+              mx: 'auto',
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Más que una inscripción. Una experiencia.
+          </Typography>
+
+          <Typography
+            variant="h5"
+            sx={{
+              textAlign: 'center',
+              color: '#E6F2B1',
+              fontWeight: 900,
+              fontSize: { xs: '1.1rem', sm: '1.4rem' },
+              mb: 1,
+              fontFamily: "'Space Grotesk', sans-serif",
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Todo lo que incluye tu experiencia
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              mb: 4,
+              maxWidth: 560,
+              mx: 'auto',
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Tu inscripción incluye todo lo necesario para que vivas HYBRID EXPERIENCE al máximo:
+          </Typography>
+
+          <Grid container spacing={2} sx={{ mb: 5 }}>
+            {BENEFICIOS_EXPERIENCIA.map((beneficio) => (
+              <Grid size={{ xs: 12, sm: 6 }} key={beneficio}>
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      color: '#E6F2B1',
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    ✔
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: '0.9rem',
+                      lineHeight: 1.6,
+                      fontFamily: "'Space Grotesk', sans-serif",
+                    }}
+                  >
+                    {beneficio}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: '#fff',
+              fontWeight: 700,
+              mb: 6,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Pero lo más importante no viene dentro del kit.
+            <br />
+            Viene con las personas que estarán a tu lado.
+          </Typography>
+
+          <Typography
+            variant="h5"
+            sx={{
+              textAlign: 'center',
+              color: '#E6F2B1',
+              fontWeight: 900,
+              fontSize: { xs: '1.1rem', sm: '1.4rem' },
+              mb: 3,
+              fontFamily: "'Space Grotesk', sans-serif",
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Más que una competencia. Una comunidad.
+          </Typography>
+
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'rgba(255,255,255,0.75)',
+              lineHeight: 1.9,
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              mb: 4,
+              fontFamily: "'Space Grotesk', sans-serif",
+              textAlign: { xs: 'left', sm: 'center' },
+              maxWidth: 680,
+              mx: 'auto',
+            }}
+          >
+            El deporte híbrido está transformando la forma de entrenar, competir y conectar.
+            <br />
+            <br />
+            HYBRID EXPERIENCE reúne a quienes ya viven este deporte, a quienes sueñan con competir
+            por primera vez y a quienes entienden que el verdadero reto siempre es convertirse en
+            una mejor versión de sí mismos.
+            <br />
+            <br />
+            Aquí no importa si buscas tu mejor marca, tu primera meta o simplemente vivir una
+            experiencia diferente.
+            <br />
+            <br />
+            No importa tu edad.
+            <br />
+            No importa tu experiencia.
+            <br />
+            No importa de dónde vienes.
+            <br />
+            Lo importante es que hoy perteneces.
+            <br />
+            <br />
+            Cada entrenamiento suma.
+            <br />
+            Cada meta inspira.
+            <br />
+            Cada historia fortalece esta comunidad.
+            <br />
+            <br />
+            Porque HYBRID EXPERIENCE no es solo un evento.
+            <br />
+            Es un movimiento que crece con cada persona que decide aceptar el reto.
+            <br />
+            <br />
+            Únete a la comunidad HYBRID EXPERIENCE.
+          </Typography>
+
+          <Box
+            sx={{
+              border: '1px solid rgba(230,242,177,0.3)',
+              borderLeft: '3px solid #E6F2B1',
+              bgcolor: 'rgba(230,242,177,0.05)',
+              px: { xs: 3, sm: 5 },
+              py: { xs: 3, sm: 4 },
+              mb: 5,
+              maxWidth: 680,
+              mx: 'auto',
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                textAlign: 'center',
+                color: '#fff',
+                fontWeight: 900,
+                fontStyle: 'italic',
+                fontSize: { xs: '1rem', sm: '1.25rem' },
+                lineHeight: 1.5,
+                fontFamily: "'Space Grotesk', sans-serif",
+              }}
+            >
+              "No importa de dónde vienes. Lo importante es que hoy perteneces."
+            </Typography>
+          </Box>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              component="a"
+              href="#compite"
+              variant="outlined"
+              size="large"
+              sx={{
+                borderRadius: 0,
+                fontWeight: 700,
+                borderWidth: 2,
+                borderColor: '#E6F2B1',
+                color: '#E6F2B1',
+                fontFamily: "'Space Grotesk', sans-serif",
+                '&:hover': { borderWidth: 2, borderColor: '#E6F2B1', bgcolor: 'rgba(230,242,177,0.1)' },
+              }}
+            >
+              Ver categorías
+            </Button>
           </Box>
         </Container>
       </Box>

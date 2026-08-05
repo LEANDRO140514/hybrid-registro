@@ -4,6 +4,7 @@ import type { Producto } from '../data/catalogo'
 export interface InscripcionInput {
   id: string
   producto: Producto
+  precioPagado: number
   teamName: string | null
   participants: string[]
   contactName: string
@@ -29,7 +30,7 @@ export async function submitInscripcion(
       contact_name: input.contactName,
       contact_email: input.contactEmail,
       contact_phone: input.contactPhone,
-      amount: input.producto.precio,
+      amount: input.precioPagado,
       currency: 'MXN',
       status: 'pending',
     },

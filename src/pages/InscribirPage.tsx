@@ -4,7 +4,8 @@ import { Box, Button, Card, CardContent, Container, IconButton, Stack, TextField
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Link, useRouter, useSearch } from '@tanstack/react-router'
 import RouteMetadata from '../components/RouteMetadata'
-import { CATALOGO, formatPrecio } from '../data/catalogo'
+import { CATALOGO, formatPrecio, getPrecioParaEtapa } from '../data/catalogo'
+import { resolveEtapaComercial } from '../config/pricingStage'
 import { submitInscripcion } from '../api/inscripciones'
 import { generateQrTicket } from '../lib/qrTicket'
 import { buildTicketPdfBase64 } from '../lib/registrationPdf'
@@ -23,6 +24,8 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export default function InscribirPage() {
   const search = useSearch({ from: '/inscribir' })
   const producto = useMemo(() => CATALOGO.find((p) => p.code === search.cat), [search.cat])
+  const etapaActual = resolveEtapaComercial()
+  const precioActual = producto ? getPrecioParaEtapa(producto, etapaActual) : 0
   const router = useRouter()
 
   const handleBack = () => {
@@ -100,6 +103,7 @@ export default function InscribirPage() {
     const result = await submitInscripcion({
       id: registrationId,
       producto,
+      precioPagado: precioActual,
       teamName: teammatesNeeded > 0 && teamName.trim() ? teamName.trim() : null,
       participants,
       contactName: contactName.trim(),
@@ -112,8 +116,8 @@ export default function InscribirPage() {
       return
     }
 
-    const qrUrl = await generateQrTicket({ registrationId, producto, participants, precio: producto.precio })
-    const amountLabel = `${formatPrecio(producto.precio)} · ${producto.precioUnidad}`
+    const qrUrl = await generateQrTicket({ registrationId, producto, participants, precio: precioActual })
+    const amountLabel = `${formatPrecio(precioActual)} · ${producto.precioUnidad}`
     const pdfBase64 = buildTicketPdfBase64({
       registrationId,
       categoryName: producto.nombre,
@@ -141,10 +145,10 @@ export default function InscribirPage() {
     // exacto desde el mensaje de WhatsApp (LIKE 'xxxxxxxx%' sobre id::text).
     const inscriptionCode = `HEX-${view.registrationId.slice(0, 8).toUpperCase()}`
     const paidWhatsappUrl = getSupportWhatsAppUrl(
-      `Hola, ya pagué mi inscripción a ${producto.nombre} (${formatPrecio(producto.precio)}). Mi código es ${inscriptionCode}. Nombre: ${contactName.trim()}.`,
+      `Hola, ya pagué mi inscripción a ${producto.nombre} (${formatPrecio(precioActual)}). Mi código es ${inscriptionCode}. Nombre: ${contactName.trim()}.`,
     )
     const whatsappUrl = getSupportWhatsAppUrl(
-      `Hola, acabo de registrarme para ${producto.nombre} (${formatPrecio(producto.precio)}) y necesito el link de pago. Mi código es ${inscriptionCode}.`,
+      `Hola, acabo de registrarme para ${producto.nombre} (${formatPrecio(precioActual)}) y necesito el link de pago. Mi código es ${inscriptionCode}.`,
     )
 
     return (
@@ -166,7 +170,7 @@ export default function InscribirPage() {
               {producto.nombre}
             </Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
-              {formatPrecio(producto.precio)} · {producto.precioUnidad}
+              {formatPrecio(precioActual)} · {producto.precioUnidad}
             </Typography>
 
             {view.qrUrl && (
@@ -203,7 +207,7 @@ export default function InscribirPage() {
                   color="primary"
                   size="large"
                 >
-                  Ir a pagar {formatPrecio(producto.precio)}
+                  Ir a pagar {formatPrecio(precioActual)}
                 </Button>
                 {paidWhatsappUrl && (
                   <>
@@ -270,7 +274,7 @@ export default function InscribirPage() {
                 {producto.nombre}
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                {formatPrecio(producto.precio)} · {producto.precioUnidad}
+                {formatPrecio(precioActual)} · {producto.precioUnidad}
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', mt: 1 }}>
                 Llena tus datos{producto.integrantes > 1 ? ' y los de tu equipo' : ''}. Al continuar te
