@@ -566,12 +566,25 @@ function ProductCard({ producto, etapaActual, accentColor = '#E6F2B1' }: Product
           sx={{
             color: 'rgba(255,255,255,0.65)',
             fontSize: '0.85rem',
-            mb: producto.incluyeChip ? 0.5 : 1.5,
+            mb: producto.integrantes > 1 ? 0 : (producto.incluyeChip ? 0.5 : 1.5),
             fontFamily: "'Space Grotesk', sans-serif",
           }}
         >
           {producto.precioUnidad}
         </Typography>
+        {producto.integrantes > 1 && (
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '0.72rem',
+              mb: producto.incluyeChip ? 0.5 : 1.5,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            {formatPrecio(getPrecioParaEtapa(producto, etapaActual) / producto.integrantes)} por persona
+          </Typography>
+        )}
         {producto.msi && (
           <Chip
             label="3 MSI"
