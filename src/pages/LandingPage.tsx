@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode, type FormEvent } from 'react'
 import {
   Box,
   Button,
@@ -13,6 +13,12 @@ import {
   Stack,
   Chip,
   IconButton,
+  TextField,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material'
 import { useNavigate } from '@tanstack/react-router'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -29,6 +35,9 @@ import { resolveEtapaComercial } from '../config/pricingStage'
 import { DOMAINS } from '../config'
 import { eventConfig } from '../config/eventConfig'
 import { SALES_CONFIG } from '../config/salesConfig'
+import { SIMULACRO_PRO_ACTIVE } from '../config/simulacroProConfig'
+import { submitSimulacroPro } from '../api/simulacroPro'
+import type { IndividualProModalidad, DoblesProModalidad } from '../api/simulacroPro'
 
 const EVENT_JSON_LD = {
   '@context': 'https://schema.org',
@@ -57,11 +66,11 @@ const EVENT_JSON_LD = {
 } as const
 
 const DIA_COMPITO_ROWS = [
-  { formato: 'Dobles', cuando: 'Viernes Vespertino · Sábado Matutino' },
-  { formato: 'Relay', cuando: 'Sábado Vespertino' },
-  { formato: '½ Hybrid', cuando: 'Sábado Matutino' },
-  { formato: 'Workout Experience', cuando: 'Sábado Matutino' },
-  { formato: 'Individual (Open / Pro)', cuando: 'Domingo Matutino' },
+  { formato: 'Dobles', cuando: 'Viernes Vespertino (Mujeres) · Sábado Día completo (Hombres y Mixto)' },
+  { formato: 'Individual (Open)', cuando: 'Viernes Vespertino' },
+  { formato: '½ Hybrid', cuando: 'Sábado Día completo' },
+  { formato: 'Workout Experience', cuando: 'Sábado Día completo' },
+  { formato: 'Relay', cuando: 'Domingo Matutino' },
 ]
 
 function DiaCompitoTable() {
@@ -325,9 +334,6 @@ const IMG_WORKOUT =
 const PRODUCT_IMAGES: Record<string, string> = {
   // COMPITE — Dobles
   'DOB-VIE-MM': IMG_DOBLES_MUJERES,
-  'DOB-VIE-HH': IMG_DOBLES_HOMBRES,
-  'DOB-VIE-MH': IMG_DOBLES_MIXTO,
-  'DOB-SAB-MM': IMG_DOBLES_MUJERES,
   'DOB-SAB-HH': IMG_DOBLES_HOMBRES,
   'DOB-SAB-MH': IMG_DOBLES_MIXTO,
   // COMPITE — Relay
@@ -337,8 +343,6 @@ const PRODUCT_IMAGES: Record<string, string> = {
   // COMPITE — Individual
   'IND-H': IMG_INDIVIDUAL_HOMBRE,
   'IND-M': IMG_INDIVIDUAL_MUJER,
-  'IND-PRO-H': IMG_INDIVIDUAL_HOMBRE,
-  'IND-PRO-M': IMG_INDIVIDUAL_MUJER,
   // EXPERIENCE — ½ Hybrid (reuses the full-format photography for the same discipline)
   'HALF-IND-M': IMG_INDIVIDUAL_MUJER,
   'HALF-IND-H': IMG_INDIVIDUAL_HOMBRE,
@@ -397,6 +401,7 @@ const DIA_SLUG: Record<string, string> = {
 const SESION_LABEL: Record<string, string> = {
   AM: 'Matutino',
   PM: 'Vespertino',
+  DIA: 'Día completo',
 }
 
 const FORMATO_DESCRIPCIONES: Record<string, string> = {
@@ -411,7 +416,7 @@ const FORMATO_DESCRIPCIONES: Record<string, string> = {
   Relay:
     'Cuatro atletas por equipo. Cada quien toma su tramo. El formato más social y el mejor para llegar en grupo.',
   Individual:
-    'El formato completo, tú solo, de principio a fin. Open para competidores; Pro para quien busca el podio. Mismo recorrido, distinta liga.',
+    'El formato completo, tú solo, de principio a fin. Categoría Open — la apertura del evento el viernes por la tarde.',
 }
 
 interface TresDiasItem {
@@ -427,34 +432,29 @@ const TRES_DIAS: TresDiasItem[] = [
     fecha: 'VIERNES 9',
     sesion: 'Vespertino',
     titulo: 'Arranca la competencia',
-    texto: 'Dobles: dos atletas se reparten el trabajo y se relevan. La energía de apertura.',
-    links: [{ label: 'Ver Dobles', href: '#compite-vie-pm' }],
-  },
-  {
-    fecha: 'SÁBADO 10',
-    sesion: 'Matutino',
-    titulo: 'El día más abierto',
-    texto:
-      'Vuelven los Dobles, debuta el ½ Hybrid, y quien nunca ha competido puede tomar el Workout. Es el día para entrar al deporte.',
+    texto: 'Dobles Mujeres e Individual (Open) abren la competencia. La energía del primer día.',
     links: [
-      { label: 'Ver Dobles', href: '#compite-sab-am' },
-      { label: 'Ver ½ Hybrid y Workout', href: '#experience' },
+      { label: 'Ver Dobles', href: '#compite-vie-pm-dobles' },
+      { label: 'Ver Individual', href: '#compite-vie-pm-individual' },
     ],
   },
   {
     fecha: 'SÁBADO 10',
-    sesion: 'Vespertino',
-    titulo: 'Relay',
-    texto: 'Cuatro atletas, un solo tiempo. El formato más ruidoso y de mayor ambiente.',
-    links: [{ label: 'Ver Relay', href: '#compite-sab-pm' }],
+    sesion: 'Día completo',
+    titulo: 'El día más abierto',
+    texto:
+      'Dobles Hombres y Mixto, debuta el ½ Hybrid, y quien nunca ha competido puede tomar el Workout. Día completo, abierto a todos los niveles.',
+    links: [
+      { label: 'Ver Dobles', href: '#compite-sab-dia-dobles' },
+      { label: 'Ver ½ Hybrid y Workout', href: '#experience' },
+    ],
   },
   {
     fecha: 'DOMINGO 11',
     sesion: 'Matutino',
-    titulo: 'Individual',
-    texto:
-      'Sin relevos, sin equipo: tú contra el reloj. Open y Pro. El cierre y los tiempos que definen el podio.',
-    links: [{ label: 'Ver Individual', href: '#compite-dom-am' }],
+    titulo: 'Relay',
+    texto: 'Cuatro atletas, un solo tiempo. El cierre del evento con el formato más social y de mayor ambiente.',
+    links: [{ label: 'Ver Relay', href: '#compite-dom-am-relay' }],
   },
 ]
 
@@ -681,7 +681,8 @@ function groupProductos(productos: Producto[]): ProductoGroup[] {
     const key = `${p.dia}|${p.sesion}|${p.tipo}`
     let group = groups.find((g) => g.key === key)
     if (!group) {
-      const id = `compite-${DIA_SLUG[p.dia]}-${p.sesion.toLowerCase()}`
+      const tipoSlug = p.tipo.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      const id = `compite-${DIA_SLUG[p.dia]}-${p.sesion.toLowerCase()}-${tipoSlug}`
       group = { key, id, dia: p.dia, sesion: p.sesion, tipo: p.tipo, precioUnidad: p.precioUnidad, productos: [] }
       groups.push(group)
     }
@@ -719,16 +720,16 @@ interface PrizeRow {
   premio: number
 }
 
-const PRO_PRIZES: PrizeRow[] = [
+const INDIVIDUAL_PRIZES: PrizeRow[] = [
+  { lugar: '1°', premio: 5000 },
+  { lugar: '2°', premio: 3000 },
+  { lugar: '3°', premio: 2000 },
+]
+
+const DOBLES_PRIZES: PrizeRow[] = [
   { lugar: '1°', premio: 7000 },
   { lugar: '2°', premio: 5000 },
   { lugar: '3°', premio: 3000 },
-]
-
-const OPEN_PRIZES: PrizeRow[] = [
-  { lugar: '1°', premio: 5000 },
-  { lugar: '2°', premio: 3500 },
-  { lugar: '3°', premio: 2000 },
 ]
 
 const BENEFICIOS_EXPERIENCIA = [
@@ -880,6 +881,135 @@ function SectionHeading({ label, color = '#E6F2B1' }: { label: string; color?: s
   )
 }
 
+const EMAIL_PATTERN_SIMULACRO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+type SimulacroProViewState = 'form' | 'submitting' | 'done' | 'error'
+
+function SimulacroProSection() {
+  const [view, setView] = useState<SimulacroProViewState>('form')
+  const [nombre, setNombre] = useState('')
+  const [correo, setCorreo] = useState('')
+  const [telefono, setTelefono] = useState('')
+  const [individualPro, setIndividualPro] = useState<IndividualProModalidad | ''>('')
+  const [doblesPro, setDoblesPro] = useState<DoblesProModalidad | ''>('')
+
+  const isValid =
+    nombre.trim().length > 1 &&
+    EMAIL_PATTERN_SIMULACRO.test(correo.trim()) &&
+    telefono.trim().length >= 10 &&
+    (individualPro !== '' || doblesPro !== '')
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!isValid) return
+    setView('submitting')
+    const result = await submitSimulacroPro({
+      nombre: nombre.trim(),
+      correo: correo.trim(),
+      telefono: telefono.trim(),
+      individualPro: individualPro === '' ? null : individualPro,
+      doblesPro: doblesPro === '' ? null : doblesPro,
+    })
+    setView(result.ok ? 'done' : 'error')
+  }
+
+  return (
+    <Box id="simulacro-pro" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#111111' }}>
+      <Container maxWidth="sm">
+        <SectionHeading label="SIMULACRO PRO" />
+        <Typography
+          variant="h5"
+          sx={{
+            textAlign: 'center',
+            color: '#fff',
+            fontWeight: 900,
+            mb: 2,
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
+        >
+          ¿Interesado en competir en modalidad Pro?
+        </Typography>
+        <Typography
+          sx={{
+            textAlign: 'center',
+            color: 'text.secondary',
+            mb: 4,
+            maxWidth: 480,
+            mx: 'auto',
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
+        >
+          Estamos evaluando la apertura de un simulacro Pro dentro de HYBRID EXPERIENCE. Déjanos tus
+          datos e indícanos la modalidad que te interesa. La organización se comunicará contigo.
+        </Typography>
+
+        {view === 'done' ? (
+          <Typography sx={{ textAlign: 'center', color: '#E6F2B1', fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
+            ¡Listo! Dejamos registrado tu interés — la organización se comunicará contigo.
+          </Typography>
+        ) : (
+          <Stack component="form" spacing={2.5} onSubmit={(e) => void handleSubmit(e)}>
+            <TextField label="Nombre completo" value={nombre} onChange={(e) => setNombre(e.target.value)} fullWidth required />
+            <TextField label="Correo electrónico" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} fullWidth required />
+            <TextField label="WhatsApp" value={telefono} onChange={(e) => setTelefono(e.target.value)} fullWidth required />
+
+            <FormControl>
+              <FormLabel sx={{ color: '#E6F2B1', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em', '&.Mui-focused': { color: '#E6F2B1' } }}>
+                Individual Pro (elige una, opcional)
+              </FormLabel>
+              <RadioGroup value={individualPro} onChange={(e) => setIndividualPro(e.target.value as IndividualProModalidad)}>
+                <FormControlLabel value="hombre" control={<Radio />} label="Individual Pro — Hombre" />
+                <FormControlLabel value="mujer" control={<Radio />} label="Individual Pro — Mujer" />
+              </RadioGroup>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel sx={{ color: '#E6F2B1', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em', '&.Mui-focused': { color: '#E6F2B1' } }}>
+                Dobles Pro (elige una, opcional)
+              </FormLabel>
+              <RadioGroup value={doblesPro} onChange={(e) => setDoblesPro(e.target.value as DoblesProModalidad)}>
+                <FormControlLabel value="hombres" control={<Radio />} label="Dobles Pro — Hombres" />
+                <FormControlLabel value="mujeres" control={<Radio />} label="Dobles Pro — Mujeres" />
+                <FormControlLabel value="mixto" control={<Radio />} label="Dobles Pro — Mixto" />
+              </RadioGroup>
+            </FormControl>
+
+            <Typography sx={{ fontSize: '0.78rem', color: 'text.secondary', lineHeight: 1.5 }}>
+              La apertura de esta modalidad dependerá del volumen de inscripción y de la valoración de
+              la Dirección Deportiva del evento HYBRID EXPERIENCE. Dejar tus datos es una expresión de
+              interés, no una inscripción confirmada.
+            </Typography>
+
+            <Button
+              type="submit"
+              variant="outlined"
+              size="large"
+              disabled={!isValid || view === 'submitting'}
+              sx={{
+                borderRadius: 0,
+                borderWidth: 2,
+                borderColor: '#E6F2B1',
+                color: '#E6F2B1',
+                fontWeight: 700,
+                py: 1.25,
+                fontFamily: "'Space Grotesk', sans-serif",
+                '&:hover': { borderWidth: 2, borderColor: '#E6F2B1', bgcolor: 'rgba(230,242,177,0.1)' },
+              }}
+            >
+              {view === 'submitting' ? 'Enviando…' : 'Dejar mis datos'}
+            </Button>
+            {view === 'error' && (
+              <Typography sx={{ color: '#ff8a8a', fontSize: '0.85rem', textAlign: 'center' }}>
+                No pudimos guardar tu interés. Inténtalo de nuevo en unos minutos.
+              </Typography>
+            )}
+          </Stack>
+        )}
+      </Container>
+    </Box>
+  )
+}
+
 const OPEN_DATA = [
   { name: 'Ski Erg', distance: '1000 m', weight: '—' },
   { name: 'Sled Push', distance: '4 × 12,5 m (50 m)', weight: '152kg / 102kg' },
@@ -913,6 +1043,7 @@ function Navbar() {
     { label: 'PRECIOS', href: '#precios' },
     { label: 'COMPITE', href: '#compite' },
     { label: 'PREMIOS', href: '#premios' },
+    ...(SIMULACRO_PRO_ACTIVE ? [{ label: 'PRO', href: '#simulacro-pro' }] : []),
     { label: 'ASISTE', href: '#asiste' },
     { label: 'UBICACIÓN', href: '#ubicacion' },
     { label: 'PREPARACIÓN', href: '#preparacion' },
@@ -1592,7 +1723,7 @@ export default function LandingPage() {
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
-                  Sábado 10 · Matutino · {formatPrecio(350)}
+                  Sábado 10 · Día completo · {formatPrecio(350)}
                 </Typography>
                 <Typography
                   variant="body1"
@@ -1646,7 +1777,7 @@ export default function LandingPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              Formato by ENFORMA · Sábado 10 Matutino
+              Formato by ENFORMA · Sábado 10 Día completo
             </Typography>
             <Typography
               variant="body1"
@@ -2096,9 +2227,9 @@ export default function LandingPage() {
                     fontSize: '0.9rem',
                   }}
                 >
-                  Categoría individual de alto rendimiento. Pesos incrementados y
-                  mayor exigencia física. Recomendada para atletas con experiencia
-                  comprobable en competencias de fitness funcional.
+                  Categoría individual de alto rendimiento — actualmente en evaluación como
+                  Simulacro Pro. Pesos incrementados y mayor exigencia física, para atletas con
+                  experiencia comprobable. Deja tus datos en Simulacro Pro si te interesa.
                 </Typography>
               </Box>
             </Grid>
@@ -2567,15 +2698,16 @@ export default function LandingPage() {
               textAlign: 'center',
               color: '#fff',
               fontWeight: 700,
-              mb: 5,
+              mb: 6,
               maxWidth: 560,
               mx: 'auto',
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Más de {formatPrecio(50000)} en premios en efectivo
+            Más de {formatPrecio(60000)} en premios en efectivo
           </Typography>
 
+          {/* VIERNES */}
           <Typography
             variant="overline"
             sx={{
@@ -2589,13 +2721,65 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Individual — podios independientes por género
+            Viernes 9 — Vespertino
           </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mb: 5 }}>
-            <PrizeTable title="PRO" rows={PRO_PRIZES} />
-            <PrizeTable title="OPEN" rows={OPEN_PRIZES} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mb: 6 }}>
+            <PrizeTable title="INDIVIDUAL MUJERES OPEN" rows={INDIVIDUAL_PRIZES} />
+            <PrizeTable title="INDIVIDUAL HOMBRES OPEN" rows={INDIVIDUAL_PRIZES} />
+            <PrizeTable title="DOBLES MUJERES OPEN" rows={DOBLES_PRIZES} />
           </Stack>
 
+          {/* SÁBADO */}
+          <Typography
+            variant="overline"
+            sx={{
+              display: 'block',
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              fontSize: '0.7rem',
+              mb: 3,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Sábado 10 — Día completo
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mb: 3 }}>
+            <PrizeTable title="DOBLES HOMBRES OPEN" rows={DOBLES_PRIZES} />
+            <PrizeTable title="DOBLES MIXTOS OPEN" rows={DOBLES_PRIZES} />
+          </Stack>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '0.85rem',
+              maxWidth: 480,
+              mx: 'auto',
+              mb: 6,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            ½ Hybrid y Workout: reconocimiento y kit para todos los participantes.
+          </Typography>
+
+          {/* DOMINGO */}
+          <Typography
+            variant="overline"
+            sx={{
+              display: 'block',
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              fontSize: '0.7rem',
+              mb: 1.5,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Domingo 11 — Matutino
+          </Typography>
           <Typography
             variant="body2"
             sx={{
@@ -2607,11 +2791,12 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Dobles, Relay, ½ Hybrid y Workout: reconocimiento y premios a los mejores tiempos por
-            categoría.
+            Relay: reconocimiento y premios a los mejores tiempos por categoría.
           </Typography>
         </Container>
       </Box>
+
+      {SIMULACRO_PRO_ACTIVE && <SimulacroProSection />}
 
       {/* ===== ASISTE SECTION ===== */}
       <Box id="asiste" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#111111' }}>

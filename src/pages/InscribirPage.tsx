@@ -5,6 +5,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Link, useRouter, useSearch } from '@tanstack/react-router'
 import RouteMetadata from '../components/RouteMetadata'
 import { CATALOGO, formatPrecio, getPrecioParaEtapa } from '../data/catalogo'
+import type { Producto } from '../data/catalogo'
 import { resolveEtapaComercial } from '../config/pricingStage'
 import { submitInscripcion } from '../api/inscripciones'
 import { generateQrTicket } from '../lib/qrTicket'
@@ -20,6 +21,16 @@ type ViewState =
   | { kind: 'error'; message: string }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function getMensajePago(producto: Producto): string {
+  if (producto.msi) {
+    return '3 MESES SIN INTERESES — Disponible con tarjetas participantes a través de Mercado Pago.'
+  }
+  if (producto.tipo === 'Workout Experience') {
+    return `PRECIO ÚNICO ${formatPrecio(producto.precios as number)} durante todas las etapas. Sin meses sin intereses.`
+  }
+  return 'Pago seguro mediante Mercado Pago. Este producto no participa en 3 meses sin intereses.'
+}
 
 export default function InscribirPage() {
   const search = useSearch({ from: '/inscribir' })
@@ -275,6 +286,9 @@ export default function InscribirPage() {
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>
                 {formatPrecio(precioActual)} · {producto.precioUnidad}
+              </Typography>
+              <Typography sx={{ color: 'primary.main', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.03em', mt: 0.5 }}>
+                {getMensajePago(producto)}
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', mt: 1 }}>
                 Llena tus datos{producto.integrantes > 1 ? ' y los de tu equipo' : ''}. Al continuar te
