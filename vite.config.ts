@@ -29,6 +29,13 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Sin esto el service worker nuevo se queda "esperando" y quien ya
+        // visitó el sitio sigue viendo la versión cacheada anterior hasta
+        // cerrar todas sus pestañas — en un sitio de venta eso significa
+        // mostrar precios/itinerario viejos a gente que ya nos visitó.
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
