@@ -1,3 +1,7 @@
+// PLANB-CLIP-PAYMENT-01: este correo se manda al registrar, ANTES de que
+// exista un pago — por eso ya no lleva QR ni PDF. Entregar un boleto aquí
+// implicaba dar por confirmado un lugar que todavía no se pagó. El boleto
+// real, emitido tras validar el pago, es trabajo del Frente B.
 interface RegistrationEmailInput {
   to: string
   contactName: string
@@ -5,8 +9,7 @@ interface RegistrationEmailInput {
   amountLabel: string
   participants: string[]
   paymentLink: string | null
-  qrDataUrl: string | null
-  pdfBase64: string | null
+  clipPaymentLink: string | null
 }
 
 // Plain fetch instead of insforge.functions.invoke(): that SDK method

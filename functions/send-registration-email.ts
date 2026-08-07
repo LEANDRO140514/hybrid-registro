@@ -1,7 +1,14 @@
-// PLANB-LANDING-01: sends the registration confirmation email via Resend.
-// Public function (anon-invokable from /inscribir), so it builds the
-// subject/HTML itself server-side instead of trusting client-supplied
-// HTML — the client only supplies structured registration data.
+// PLANB-LANDING-01: sends the registration email via Resend. Public
+// function (anon-invokable from /inscribir), so it builds the subject/HTML
+// itself server-side instead of trusting client-supplied HTML — the client
+// only supplies structured registration data.
+//
+// PLANB-CLIP-PAYMENT-01: this mail is sent at registration time, BEFORE any
+// payment exists. It is a PENDING-PAYMENT notice, not a confirmation, and
+// carries no QR or PDF ticket: handing over a ticket here would vouch for a
+// spot nobody has paid for. It lists every available payment method
+// (Mercado Pago and, when it applies, Clip). Issuing the real ticket once
+// the payment is validated is Frente B, a separate future phase.
 
 const FROM_ADDRESS = 'HYBRID EXPERIENCE <registro@mail.hybrid-registro.enforma.mx>'
 
@@ -18,8 +25,7 @@ interface RegistrationEmailPayload {
   amountLabel: string
   participants: string[]
   paymentLink: string | null
-  qrDataUrl: string | null
-  pdfBase64: string | null
+  clipPaymentLink: string | null
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -34,32 +40,36 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-const QR_CONTENT_ID = 'registro-qr'
+function paymentButton(href: string, label: string, primary: boolean): string {
+  const style = primary
+    ? 'background:#111;color:#E6F2B1'
+    : 'background:#fff;color:#111;border:2px solid #111'
+  return `<a href="${escapeHtml(href)}" style="${style};padding:14px 24px;text-decoration:none;font-weight:700;display:inline-block;margin:0 8px 12px 0">${escapeHtml(label)}</a>`
+}
 
 function buildHtml(payload: RegistrationEmailPayload): string {
   const participantsHtml = payload.participants.map((p) => escapeHtml(p)).join(', ')
-  const paymentBlock = payload.paymentLink
-    ? `<p style="margin:24px 0"><a href="${escapeHtml(payload.paymentLink)}" style="background:#111;color:#E6F2B1;padding:14px 24px;text-decoration:none;font-weight:700;display:inline-block">Completar pago — ${escapeHtml(payload.amountLabel)}</a></p>`
+
+  const buttons = [
+    payload.paymentLink ? paymentButton(payload.paymentLink, 'Pagar con Mercado Pago', true) : null,
+    payload.clipPaymentLink ? paymentButton(payload.clipPaymentLink, 'Pagar con Clip', false) : null,
+  ].filter((b): b is string => b !== null)
+
+  const paymentBlock = buttons.length > 0
+    ? `<p style="margin:8px 0 0;font-weight:700">Elige cómo pagar:</p>
+       <p style="margin:12px 0 0">${buttons.join('')}</p>`
     : `<p style="margin:24px 0;color:#444">Aún no está disponible el link de pago para esta categoría — te contactaremos en breve para completarlo.</p>`
-  // Referenced via Content-ID (cid:), not a data: URI — Gmail and other
-  // clients strip inline base64 images from received mail.
-  const qrBlock = payload.qrDataUrl
-    ? `<p style="margin:24px 0"><img src="cid:${QR_CONTENT_ID}" alt="Código QR de tu registro" width="220" height="220" /></p>`
-    : ''
-  const pdfNote = payload.pdfBase64
-    ? '<p style="margin:24px 0 0;color:#666;font-size:13px">Adjuntamos tu boleto en PDF con este mismo código.</p>'
-    : ''
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;color:#111">
       <p style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#666;margin-bottom:4px">Hybrid Experience</p>
-      <h1 style="font-size:22px;margin:0 0 16px">¡Registro recibido, ${escapeHtml(payload.contactName)}!</h1>
+      <h1 style="font-size:22px;margin:0 0 16px">Recibimos tu registro, ${escapeHtml(payload.contactName)}</h1>
       <p style="margin:0 0 4px"><strong>${escapeHtml(payload.categoryName)}</strong></p>
       <p style="margin:0 0 16px;color:#444">${escapeHtml(payload.amountLabel)}</p>
       <p style="margin:0 0 16px;color:#444">Participantes: ${participantsHtml}</p>
+      <p style="margin:0 0 8px;color:#444">Tu lugar todavía <strong>no está confirmado</strong>. Para confirmarlo, completa tu pago con cualquiera de los métodos disponibles.</p>
       ${paymentBlock}
-      ${qrBlock}
-      ${pdfNote}
+      <p style="margin:24px 0 0;color:#666;font-size:13px">Cuando validemos tu pago te enviamos tu boleto con el código de acceso al evento.</p>
     </div>
   `
 }
@@ -106,8 +116,6 @@ export default async function (req: Request): Promise<Response> {
     })
   }
 
-  const qrDataUrl = isNonEmptyString(payload.qrDataUrl) ? payload.qrDataUrl : null
-  const pdfBase64 = isNonEmptyString(payload.pdfBase64) ? payload.pdfBase64 : null
   const html = buildHtml({
     to: payload.to,
     contactName: payload.contactName,
@@ -115,16 +123,10 @@ export default async function (req: Request): Promise<Response> {
     amountLabel: payload.amountLabel,
     participants: payload.participants.filter(isNonEmptyString),
     paymentLink: isNonEmptyString(payload.paymentLink) ? payload.paymentLink : null,
-    qrDataUrl,
-    pdfBase64,
+    clipPaymentLink: isNonEmptyString(payload.clipPaymentLink) ? payload.clipPaymentLink : null,
   })
 
-  const qrBase64 = qrDataUrl?.split(',')[1] ?? null
-  const attachments = [
-    qrBase64 ? { filename: 'registro-qr.png', content: qrBase64, content_id: QR_CONTENT_ID } : null,
-    pdfBase64 ? { filename: 'boleto-hybrid-experience.pdf', content: pdfBase64 } : null,
-  ].filter((a): a is NonNullable<typeof a> => a !== null)
-
+  // Sin adjuntos a propósito: no se entrega boleto antes del pago.
   const resendResponse = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -136,7 +138,6 @@ export default async function (req: Request): Promise<Response> {
       to: payload.to,
       subject: `Registro recibido — ${payload.categoryName}`,
       html,
-      attachments: attachments.length > 0 ? attachments : undefined,
     }),
   })
 

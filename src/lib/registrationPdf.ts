@@ -28,7 +28,9 @@ export function buildTicketPdfBase64(input: TicketPdfInput): string {
   let y = 130
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
-  doc.text('Registro confirmado', 40, y)
+  // No dice "confirmado": este PDF se genera al registrar, antes de pagar.
+  // El boleto válido se emite tras validar el pago (Frente B).
+  doc.text('Registro recibido — pendiente de pago', 40, y)
 
   y += 35
   doc.setFont('helvetica', 'normal')

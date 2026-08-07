@@ -12,6 +12,7 @@ import { generateQrTicket } from '../lib/qrTicket'
 import { buildTicketPdfBase64 } from '../lib/registrationPdf'
 import { sendRegistrationEmail } from '../api/registrationEmail'
 import { getPaymentLinkForProducto } from '../config/paymentLinks'
+import { getClipLinkForProducto } from '../config/clipLinks'
 import { getSupportWhatsAppUrl } from '../config/supportConfig'
 
 type ViewState =
@@ -138,6 +139,8 @@ export default function InscribirPage() {
     })
     setView({ kind: 'done', qrUrl, pdfBase64, registrationId })
 
+    // Sin qrDataUrl ni pdfBase64: este correo sale antes del pago, así que
+    // no entrega boleto. Ver PLANB-CLIP-PAYMENT-01 en WORKSPACE_STATUS.md.
     void sendRegistrationEmail({
       to: contactEmail.trim(),
       contactName: contactName.trim(),
@@ -145,13 +148,15 @@ export default function InscribirPage() {
       amountLabel,
       participants,
       paymentLink: getPaymentLinkForProducto(producto),
-      qrDataUrl: qrUrl,
-      pdfBase64,
+      clipPaymentLink: getClipLinkForProducto(producto, etapaActual),
     })
   }
 
   if (view.kind === 'done') {
     const paymentLink = getPaymentLinkForProducto(producto)
+    // Fuera de la etapa "lanzamiento" esto es null: los links de Clip
+    // llevan el monto de lanzamiento fijo (ver clipLinks.ts).
+    const clipLink = getClipLinkForProducto(producto, etapaActual)
     // Código corto derivado del UUID de la fila: permite ubicar el registro
     // exacto desde el mensaje de WhatsApp (LIKE 'xxxxxxxx%' sobre id::text).
     const inscriptionCode = `HEX-${view.registrationId.slice(0, 8).toUpperCase()}`
@@ -184,11 +189,16 @@ export default function InscribirPage() {
               {formatPrecio(precioActual)} · {producto.precioUnidad}
             </Typography>
 
+            <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
+              Tu registro fue recibido. Completa tu pago para confirmar tu lugar; recibirás tu
+              boleto una vez validado el pago.
+            </Typography>
+
             {view.qrUrl && (
               <Box
                 component="img"
                 src={view.qrUrl}
-                alt="Código QR de tu registro"
+                alt="Comprobante de tu registro"
                 sx={{ width: 220, height: 220, bgcolor: '#fff', p: 1 }}
               />
             )}
@@ -197,29 +207,51 @@ export default function InscribirPage() {
               <Button
                 component="a"
                 href={`data:application/pdf;base64,${view.pdfBase64}`}
-                download="hybrid-experience-boleto.pdf"
+                download="hybrid-experience-registro.pdf"
                 variant="outlined"
               >
-                Descargar boleto en PDF
+                Descargar comprobante en PDF
               </Button>
             )}
 
             {paymentLink ? (
               <>
-                <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
-                  Para confirmar tu lugar, completa el pago con el siguiente link:
+                <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
+                  Elige cómo pagar:
                 </Typography>
-                <Button
-                  component="a"
-                  href={paymentLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="outlined"
-                  color="primary"
-                  size="large"
+                <Stack
+                  direction={{ xs: 'column', sm: clipLink ? 'row' : 'column' }}
+                  spacing={1.5}
+                  sx={{ width: '100%', justifyContent: 'center' }}
                 >
-                  Ir a pagar {formatPrecio(precioActual)}
-                </Button>
+                  <Button
+                    component="a"
+                    href={paymentLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="outlined"
+                    color="primary"
+                    size="large"
+                  >
+                    Pagar con Mercado Pago
+                  </Button>
+                  {clipLink && (
+                    <Button
+                      component="a"
+                      href={clipLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="outlined"
+                      color="primary"
+                      size="large"
+                    >
+                      Pagar con Clip
+                    </Button>
+                  )}
+                </Stack>
+                <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
+                  {formatPrecio(precioActual)} · {producto.precioUnidad}
+                </Typography>
                 {paidWhatsappUrl && (
                   <>
                     <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
