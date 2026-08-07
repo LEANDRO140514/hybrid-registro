@@ -8,8 +8,9 @@
 - **Dominio productivo:** `hybrid-registro.enforma.mx` (Vercel, proyecto `hybrid-registro`, org `enforma-c9d3af17`)
 - **Backend:** InsForge, proyecto **enforma** (`https://3e9sriq7.us-east.insforge.app`)
 - **Historia git propia:** 18 commits, raíz `497d6ae` (2026-07-27). **No comparte historia con la landing maestra.**
-- **HEAD actual:** `0db9e99c4f34d1761a3f2386c975bde97f5ca5d7` (2026-08-07 01:55:57 -0600)
-- **Árbol:** limpio. **Ahead 3 de `origin/main`** (que sigue en `b233bbf`) — ver "Estado de publicación" en la fase PLANB-CLIP-PAYMENT-01.
+- **HEAD actual:** `7fc25f91d0105f09d1b1294a1249bb6564e25c56` (2026-08-07)
+- **Árbol:** limpio, sincronizado con `origin/main`. Todo publicado y verificado en producción — ver "Estado de publicación" en la fase PLANB-CLIP-PAYMENT-01.
+- **Nota:** un acta no puede contener su propio hash, así que el commit que la actualiza queda siempre un paso por delante de lo que ella declara.
 
 ### ⚠️ Hallazgo de la reconciliación — leer antes de confiar en las secciones históricas
 
@@ -247,14 +248,15 @@ Se conserva íntegra como **contexto de linaje** (documenta de dónde salió el 
 
 ---
 
-# Fase PLANB-CLIP-PAYMENT-01 — Frente A **COMPLETADA EN CÓDIGO LOCAL** (sin publicar)
+# Fase PLANB-CLIP-PAYMENT-01 — Frente A **COMPLETADA Y EN PRODUCCIÓN**
 
 - **Abierta:** 2026-08-06, por instrucción directa del usuario en sesión.
-- **Frente A cerrado:** 2026-08-07.
-- **Estado:** `FRENTE_A_COMPLETE_NOT_DEPLOYED` · **Gate:** `AWAITING_DEPLOY_AUTHORIZATION`
+- **Frente A cerrado en código:** 2026-08-07.
+- **Frente A publicado:** 2026-08-07 (edge function + push + deploy de Vercel, verificados contra el dominio productivo).
+- **Estado:** `FRENTE_A_DEPLOYED` · **Gate:** `PHASE_COMPLETE`
 - **HEAD de apertura:** `b233bbf` (árbol limpio, sincronizado con `origin/main`)
-- **HEAD de cierre:** `0db9e99` (árbol limpio, **ahead 3** de `origin/main`)
-- **⚠️ Nada de esto está en producción.** Ver "Estado de publicación" abajo antes de asumir que el comportamiento descrito es el que ven los clientes hoy.
+- **HEAD de cierre en código:** `0db9e99` · **HEAD publicado:** `7fc25f9` (árbol limpio, sincronizado con `origin/main`)
+- **Frente B:** sigue **sin abrir** — fase futura separada.
 
 ## Objetivo
 
@@ -306,13 +308,17 @@ El rediseño de boleto-tras-pago con QR generado en servidor queda como **fase f
 
 Flujo de pago y botón INSCRIBIRSE, catálogo y códigos, mecanismo de correo/QR/PDF, esquema y permisos de InsForge, edge functions desplegadas, WhatsApp. Entregadas en sesión; los hechos relevantes quedan resumidos arriba.
 
-### Commits de la fase (3, todos locales)
+### Commits de la fase (5, todos publicados en `origin/main`)
 
 | Commit | Contenido |
 |---|---|
 | `4790338` | Reconciliación de acta (PLANB-ACTA-RECONCILE) + apertura de esta fase. Solo documentación. |
 | `91f9fe4` | `clipLinks.ts` + selector MP/Clip + correo honesto. 5 archivos, +133/−51. |
 | `0db9e99` | Ocultar QR/PDF hasta pago confirmado. 1 archivo, +27/−18. |
+| `b96ecc4` | Cierre de acta del Frente A. Solo documentación, +87/−29. |
+| `7fc25f9` | Botón SHOP deshabilitado + copy del formulario alineado al flujo nuevo. 2 archivos, +19/−14. |
+
+Los cuatro primeros se publicaron juntos (`b233bbf..b96ecc4`); `7fc25f9` salió después, ya con el resto en producción.
 
 ### Resultado funcional
 
@@ -335,24 +341,43 @@ Durante la verificación visual del 2026-08-07 se intentó renderizar la vista `
 
 **Lección para futuras sesiones:** parchear `window.fetch` **no** basta para aislar al SDK de InsForge. Para verificar la vista `done` sin tocar la base hace falta otra vía (mock del módulo, o un flag de desarrollo), o asumir la fila y borrarla.
 
-## Estado de publicación — ⚠️ NADA DESPLEGADO
+## Ajuste posterior al cierre — copy inconsistente detectado en producción (`7fc25f9`)
 
-- Los **3 commits están solo en local**. `origin/main` sigue en `b233bbf`.
-- La edge function `send-registration-email` **en producción sigue siendo la versión vieja**, la que adjunta el boleto. El archivo corregido existe únicamente en el repo.
-- En consecuencia, **el comportamiento que ven los clientes hoy es el anterior**: boleto entregado antes de pagar, un solo botón de pago, sin Clip.
+Al verificar la landing ya publicada se encontró que la vista **`form`** de `InscribirPage.tsx` (no la `done`, que sí se había corregido) seguía prometiendo lo viejo:
 
-### Acción requerida para publicar (EN ESTE ORDEN, cuando se autorice)
+> *"Al continuar te mostramos el link de pago de Mercado Pago para confirmar tu lugar, y te enviamos tu boleto (QR + PDF) por correo."*
 
-1. `npx @insforge/cli functions deploy send-registration-email --file functions/send-registration-email.ts`
-2. `git push` (dispara el deploy de Vercel)
+Ambas afirmaciones ya eran falsas: hay dos métodos de pago, y el correo dejó de llevar boleto. Es el mismo defecto que motivó la fase — prometer un boleto inexistente — sobrevivido en la pantalla *anterior* al registro. Corregido a: *"Al continuar podrás elegir cómo pagar (Mercado Pago o Clip). Recibirás tu boleto una vez validado el pago."*
 
-Publicar el frontend sin desplegar la función **no rompe nada** — la función vieja ignora el campo `clipPaymentLink` y simplemente no recibe `qrDataUrl`/`pdfBase64`, así que no adjunta nada — pero deja el correo con el texto viejo. No invertir el orden.
+**Lección:** al cambiar qué entrega un flujo, revisar también lo que se promete **antes** de entrarle, no solo la pantalla donde ocurre la entrega.
+
+En el mismo commit, por petición del usuario: el botón **SHOP** del navbar (escritorio y móvil) pasa a estado deshabilitado con etiqueta **"SHOP · PRONTO"** — se mantiene visible a propósito, para que la audiencia sepa que la tienda viene, sin prometer que ya abrió. Ya no navega a `DOMAINS.shop`; se verificó que la URL de la tienda no existe en el bundle publicado. El import de `DOMAINS` quedó huérfano en `LandingPage.tsx` (el botón era su único uso ahí) y se retiró, dejando nota de dónde reponerlo al reactivar la tienda.
+
+## Estado de publicación — ✅ TODO EN PRODUCCIÓN (2026-08-07)
+
+Publicado en el orden previsto:
+
+1. **Edge function desplegada** — `npx @insforge/cli functions deploy send-registration-email`. Resultado: `updation success` → `https://3e9sriq7.function2.insforge.app`. Verificada descargando el código vivo del servidor: contiene `clipPaymentLink`, `no está confirmado`, `Elige cómo pagar`, `Recibimos tu registro`; sin `qrDataUrl`, `pdfBase64`, `attachments`, `cid:` ni `Adjuntamos tu boleto`.
+2. **Push** — `b233bbf..b96ecc4`, y después `b96ecc4..7fc25f9`. `origin/main` en `7fc25f9`, sincronizado.
+3. **Deploy de Vercel** — Ready en Production ambas veces (11 s de build).
+
+### Verificación contra el dominio productivo
+
+No se dio por buena la palabra del dashboard: se descargó el bundle que sirve `hybrid-registro.enforma.mx` y se comprobó que **su hash coincide con el del build local** (`index-BJ8Mm3bd.js`), es decir, es exactamente el código compilado aquí.
+
+- **Presentes:** `Elige cómo pagar`, `Pagar con Mercado Pago`, `Pagar con Clip`, `pago.clip.mx`, `podrás elegir cómo pagar`, `una vez validado`, `SHOP · PRONTO`, `Tienda — próximamente`.
+- **Ausentes:** `Ir a pagar` (botón único viejo), `Descargar comprobante en PDF`, `hybrid-experience-registro.pdf`, `te enviamos tu…`, `boleto (QR + PDF)`, `shop.enforma.mx`.
+- **Landing sana:** HTTP 200, React monta (1369 nodos), 0 errores de consola, 0 peticiones fallidas, 23 cards, las 8 secciones presentes, 13/13 fondos fotográficos cargan, sin overflow horizontal en 375 px, hamburguesa correcta, ruta `/inscribir?cat=…` resuelve el producto correcto.
+- **Botón SHOP inerte comprobado en ejecución:** `disabled`, `pointer-events: none`, y espiando `window.open` con clic programático y evento real — nunca se invocó.
+
+**Comportamiento que ven los clientes hoy:** formulario que anuncia elección de método de pago y boleto tras validación; selector de dos métodos en registro recibido; correo de pendiente de pago con ambos links y sin adjuntos; sin QR ni descarga de PDF antes de pagar; tienda anunciada como próxima.
 
 ## Pendientes para la próxima sesión
 
 - **Frente B — fase futura, SIN ABRIR todavía.** Generación de QR/PDF en servidor, campo `ticket_sent_at`, y schedule que dispare el boleto al marcar `'paid'` en InsForge. Los insumos ya están registrados en "Fuera de alcance" y en "Hechos técnicos verificados" arriba.
 - **Los links de Clip vencen funcionalmente el 2026-08-31**, al terminar la etapa lanzamiento: el botón de Clip desaparecerá solo por el guard. **Pedir a Paulina los links de preventa antes de esa fecha** y actualizar `clipLinks.ts` (y `CLIP_LINKS_ETAPA` si el criterio cambia).
-- **Push y deploy: NO autorizados aún**, esperando decisión del usuario.
+- **Reactivar la tienda** cuando `shop.enforma.mx` esté lista: quitar `disabled`, restaurar el `onClick` con `DOMAINS.shop` y reimportar `DOMAINS` en `LandingPage.tsx`.
+- **Nadie ha marcado un pago todavía.** Las inscripciones siguen todas en `status='pending'`; el circuito de confirmación por WhatsApp + marcado manual en InsForge aún no se ha ejercido con un pago real de Clip.
 
 ---
 
@@ -365,14 +390,14 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: 0db9e99 (working tree CLEAN, AHEAD 3 of origin/main — origin still at b233bbf)
-Last Commits: 0db9e99 feat(payment): hide QR/PDF until payment confirmed | 91f9fe4 feat(payment): add Clip as second method + honest pre-payment email | 4790338 docs(workspace): reconcile inherited acta, open PLANB-CLIP-PAYMENT-01
-Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (codigo local, NO desplegado)
-Open Phase: (none) — PLANB-CLIP-PAYMENT-01 Frente A cerrado en codigo. Frente B no abierto.
-Gate: AWAITING_DEPLOY_AUTHORIZATION
-Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Etapa vigente: lanzamiento (hasta 2026-08-31 segun pricingStage.ts). Simulacro Pro: ACTIVO.
-DEPLOY STATE — CRITICAL: los 3 commits del Frente A estan SOLO EN LOCAL. La edge function send-registration-email en produccion sigue siendo la version VIEJA (adjunta boleto antes del pago). Lo que ven los clientes HOY es el comportamiento anterior: boleto antes de pagar, un solo boton de pago, sin Clip.
-To publish (IN THIS ORDER, when authorized):
+HEAD: 7fc25f9 (working tree CLEAN, synced with origin/main)
+Last Commits: 7fc25f9 feat(ui): disable SHOP button, align inscription form copy | b96ecc4 docs(workspace): close PLANB-CLIP-PAYMENT-01 Frente A | 0db9e99 feat(payment): hide QR/PDF until payment confirmed
+Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO)
+Open Phase: (none) — PLANB-CLIP-PAYMENT-01 Frente A completo y en produccion. Frente B no abierto.
+Gate: PHASE_COMPLETE
+Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Etapa vigente: lanzamiento (hasta 2026-08-31 segun pricingStage.ts). Simulacro Pro: ACTIVO. Tienda: DESHABILITADA ("SHOP · PRONTO").
+DEPLOY STATE: todo publicado y verificado contra el dominio productivo el 2026-08-07. Edge function send-registration-email desplegada (version honesta, sin adjuntos). origin/main = 7fc25f9. Bundle en produccion coincide en hash con el build local. Pagos activos: Mercado Pago + Clip (Clip solo en etapa lanzamiento, por guard).
+Publish order (para futuros cambios que toquen el correo):
   1. npx @insforge/cli functions deploy send-registration-email --file functions/send-registration-email.ts
   2. git push   (dispara deploy de Vercel)
   Publicar el frontend sin desplegar la funcion no rompe nada, pero deja el correo con el texto viejo. No invertir el orden.
@@ -386,13 +411,14 @@ Known Issues:
   7. Registros previos al reordenamiento de itinerario conservan el dia anterior (ej. Dobles Hombres: viernes -> sabado). Requiere aviso manual al confirmar pago.
   8. Las 26 inscripciones existentes siguen en status='pending'; ningun pago se ha marcado como confirmado.
   9. Parchear window.fetch NO aisla al SDK de InsForge (captura su propia referencia al cargar el modulo). Verificar la vista 'done' sin escribir en la base requiere otra via; ver "Incidente registrado" en la fase.
-  RESUELTO en Frente A: el PDF ya no dice "Registro confirmado" antes de pagar.
+ 10. Tienda deshabilitada: DOMAINS.shop ya no se importa en LandingPage.tsx. Al reactivarla hay que reponer el import, el onClick y quitar el disabled (escritorio y menu movil).
+  RESUELTO en Frente A: el PDF ya no dice "Registro confirmado" antes de pagar; el copy del formulario ya no promete boleto inmediato.
 Pending Decisions:
-  1. Push y deploy del Frente A: NO autorizados aun.
-  2. Frente B (QR/PDF server-side, ticket_sent_at, schedule que dispare boleto al marcar 'paid'): fase futura, sin abrir.
-  3. Links de Clip vencen funcionalmente el 2026-08-31 (fin de lanzamiento): pedir a Paulina los links de preventa antes de esa fecha y actualizar clipLinks.ts.
+  1. Frente B (QR/PDF server-side, ticket_sent_at, schedule que dispare boleto al marcar 'paid'): fase futura, sin abrir.
+  2. Links de Clip vencen funcionalmente el 2026-08-31 (fin de lanzamiento): pedir a Paulina los links de preventa antes de esa fecha y actualizar clipLinks.ts.
+  3. Cuando abra shop.enforma.mx: reactivar el boton SHOP.
 Protected Sources: (none)
-Next Authorized Phase: (ninguna abierta). Lo inmediato es la decision de publicar el Frente A (ver "To publish" arriba). Frente B queda como fase futura separada, sin abrir.
+Next Authorized Phase: (ninguna abierta). El Frente A esta completo y en produccion. Lo siguiente probable es el Frente B, o la actualizacion de links de Clip para preventa antes del 2026-08-31.
 Files To Read First: WORKSPACE_STATUS.md, src/config/clipLinks.ts, src/config/paymentLinks.ts, src/pages/InscribirPage.tsx, functions/send-registration-email.ts, src/config/pricingStage.ts, src/data/catalogo.ts
 Forbidden Actions: push sin autorizacion expresa; modificar los 10 links de Mercado Pago (los genera el usuario a mano); tocar el flujo de confirmacion por WhatsApp; commitear credenciales; exponer la API key de InsForge en frontend; flipear HOLDING_MODE_ACTIVE o SALES_CONFIG.status sin autorizacion; mover imagenes a public/; usar signed URLs para medios publicos
 Media Constraints: vigentes por herencia — ver "Media Constraints" en la historia heredada
