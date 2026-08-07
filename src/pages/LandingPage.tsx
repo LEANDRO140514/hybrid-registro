@@ -32,7 +32,8 @@ import { useCountdown } from '../hooks/useCountdown'
 import { CATALOGO, porBloque, formatPrecio, getPrecioParaEtapa } from '../data/catalogo'
 import type { Producto, EtapaComercial } from '../data/catalogo'
 import { resolveEtapaComercial } from '../config/pricingStage'
-import { DOMAINS } from '../config'
+// `DOMAINS` salió de aquí al deshabilitar el botón SHOP: era su único uso en
+// este archivo. Reimportarlo al reactivar la tienda (ver navbar).
 import { eventConfig } from '../config/eventConfig'
 import { SALES_CONFIG } from '../config/salesConfig'
 import { SIMULACRO_PRO_ACTIVE } from '../config/simulacroProConfig'
@@ -1103,15 +1104,16 @@ function Navbar() {
               {link.label}
             </Typography>
           ))}
+          {/* Tienda aún no disponible: se muestra a propósito, deshabilitada, para
+              que la audiencia sepa que viene — no navega a DOMAINS.shop todavía. */}
           <Button
-            onClick={() => window.open(`https://${DOMAINS.shop}`, '_blank')}
+            disabled
+            aria-label="Tienda — próximamente"
             sx={{
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: '0.68rem',
               fontWeight: 700,
               letterSpacing: '0.08em',
-              color: '#000000',
-              bgcolor: '#E6F2B1',
               borderRadius: 0,
               py: 0.5,
               px: 1.5,
@@ -1119,10 +1121,14 @@ function Navbar() {
               minWidth: 0,
               flexShrink: 0,
               lineHeight: 1.2,
-              '&:hover': { bgcolor: '#F0F7CD' },
+              border: '1px solid rgba(230,242,177,0.35)',
+              '&.Mui-disabled': {
+                color: 'rgba(230,242,177,0.6)',
+                bgcolor: 'transparent',
+              },
             }}
           >
-            SHOP
+            SHOP · PRONTO
           </Button>
         </Box>
 
@@ -1165,8 +1171,9 @@ function Navbar() {
               {link.label}
             </Box>
           ))}
+          {/* Tienda aún no disponible — misma decisión que en el navbar de escritorio. */}
           <Box
-            onClick={() => { setMenuOpen(false); window.open(`https://${DOMAINS.shop}`, '_blank'); }}
+            aria-disabled="true"
             sx={{
               px: 3,
               py: 1.5,
@@ -1174,12 +1181,10 @@ function Navbar() {
               fontSize: '0.8rem',
               fontWeight: 700,
               letterSpacing: '0.1em',
-              color: '#E6F2B1',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'rgba(230,242,177,0.03)' },
+              color: 'rgba(230,242,177,0.6)',
             }}
           >
-            SHOP
+            SHOP · PRONTO
           </Box>
         </Box>
       )}

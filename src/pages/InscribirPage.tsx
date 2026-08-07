@@ -332,9 +332,9 @@ export default function InscribirPage() {
                 {getMensajePago(producto)}
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', mt: 1 }}>
-                Llena tus datos{producto.integrantes > 1 ? ' y los de tu equipo' : ''}. Al continuar te
-                mostramos el link de pago de Mercado Pago para confirmar tu lugar, y te enviamos tu
-                boleto (QR + PDF) por correo.
+                Llena tus datos{producto.integrantes > 1 ? ' y los de tu equipo' : ''}. Al continuar
+                podrás elegir cómo pagar (Mercado Pago o Clip). Recibirás tu boleto una vez validado
+                el pago.
               </Typography>
             </Stack>
 
