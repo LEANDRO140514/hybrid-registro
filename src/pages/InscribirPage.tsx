@@ -194,25 +194,34 @@ export default function InscribirPage() {
               boleto una vez validado el pago.
             </Typography>
 
-            {view.qrUrl && (
-              <Box
-                component="img"
-                src={view.qrUrl}
-                alt="Comprobante de tu registro"
-                sx={{ width: 220, height: 220, bgcolor: '#fff', p: 1 }}
-              />
-            )}
+            {/*
+              Frente B: QR/boleto se mostrará tras confirmar el pago.
 
-            {view.pdfBase64 && (
-              <Button
-                component="a"
-                href={`data:application/pdf;base64,${view.pdfBase64}`}
-                download="hybrid-experience-registro.pdf"
-                variant="outlined"
-              >
-                Descargar comprobante en PDF
-              </Button>
-            )}
+              El QR y el PDF se siguen generando en el submit (viven en
+              `view.qrUrl` / `view.pdfBase64`), pero no se renderizan: antes
+              de pagar no hay lugar confirmado que acreditar, y entregar el
+              código de acceso aquí lo volvería un boleto de facto.
+
+              {view.qrUrl && (
+                <Box
+                  component="img"
+                  src={view.qrUrl}
+                  alt="Comprobante de tu registro"
+                  sx={{ width: 220, height: 220, bgcolor: '#fff', p: 1 }}
+                />
+              )}
+
+              {view.pdfBase64 && (
+                <Button
+                  component="a"
+                  href={`data:application/pdf;base64,${view.pdfBase64}`}
+                  download="hybrid-experience-registro.pdf"
+                  variant="outlined"
+                >
+                  Descargar comprobante en PDF
+                </Button>
+              )}
+            */}
 
             {paymentLink ? (
               <>
