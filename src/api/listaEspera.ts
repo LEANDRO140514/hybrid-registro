@@ -1,9 +1,12 @@
 import { insforge } from '../lib/insforgeClient'
 
+export type ModalidadListaEspera = 'individual' | 'equipo' | 'decidiendo'
+
 export interface ListaEsperaInput {
   nombre: string
   correo: string
   telefono: string
+  modalidad: ModalidadListaEspera
 }
 
 export async function submitListaEspera(
@@ -16,6 +19,7 @@ export async function submitListaEspera(
       nombre: input.nombre,
       correo: input.correo,
       telefono: input.telefono,
+      modalidad: input.modalidad,
     },
   ])
 
