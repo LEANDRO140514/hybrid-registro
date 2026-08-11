@@ -31,28 +31,28 @@ export function getPrecioParaEtapa(producto: Producto, etapa: EtapaComercial): n
 }
 
 export const CATALOGO: Producto[] = [
-  // ── COMPITE — Viernes 9 · PM · Dobles Mujeres + Individual (apertura) ──
+  // ── COMPITE — Viernes 13 · PM · Dobles Mujeres + Individual (apertura) ──
   { code: 'DOB-VIE-MM', nombre: 'Dobles Mujeres',  bloque: 'COMPITE', tipo: 'Dobles', integrantes: 2, dia: 'Viernes', sesion: 'PM', precios: { lanzamiento: 2500, preventa: 2750, regular: 3000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
   { code: 'IND-H',      nombre: 'Individual Hombre (Open)', bloque: 'COMPITE', tipo: 'Individual', integrantes: 1, dia: 'Viernes', sesion: 'PM', precios: { lanzamiento: 1500, preventa: 1650, regular: 1800 }, msi: true, precioUnidad: 'por persona', incluyeChip: true },
   { code: 'IND-M',      nombre: 'Individual Mujer (Open)',  bloque: 'COMPITE', tipo: 'Individual', integrantes: 1, dia: 'Viernes', sesion: 'PM', precios: { lanzamiento: 1500, preventa: 1650, regular: 1800 }, msi: true, precioUnidad: 'por persona', incluyeChip: true },
 
-  // ── COMPITE — Sábado 10 · Día completo · Dobles Hombres + Mixto ──
+  // ── COMPITE — Sábado 14 · Día completo · Dobles Hombres + Mixto ──
   { code: 'DOB-SAB-HH', nombre: 'Dobles Hombres',  bloque: 'COMPITE', tipo: 'Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 2500, preventa: 2750, regular: 3000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
   { code: 'DOB-SAB-MH', nombre: 'Dobles Mixto',    bloque: 'COMPITE', tipo: 'Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 2500, preventa: 2750, regular: 3000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
 
-  // ── COMPITE — Domingo 11 · AM · Relay (4 personas), cierre del evento ──
+  // ── COMPITE — Domingo 15 · AM · Relay (4 personas), cierre del evento ──
   { code: 'REL-4H',   nombre: 'Relay 4 Hombres',    bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Domingo', sesion: 'AM', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
   { code: 'REL-4M',   nombre: 'Relay 4 Mujeres',    bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Domingo', sesion: 'AM', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
   { code: 'REL-2H2M', nombre: 'Relay Mixto 2H+2M',  bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Domingo', sesion: 'AM', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
 
-  // ── EXPERIENCE — ½ Hybrid — Sábado 10 · Día completo ──
+  // ── EXPERIENCE — ½ Hybrid — Sábado 14 · Día completo ──
   { code: 'HALF-IND-M',  nombre: '½ Hybrid Individual Mujer',    bloque: 'EXPERIENCE', tipo: '½ Hybrid Individual', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 800, preventa: 900, regular: 1000 }, msi: true, precioUnidad: 'por persona', incluyeChip: true },
   { code: 'HALF-IND-H',  nombre: '½ Hybrid Individual Hombre',   bloque: 'EXPERIENCE', tipo: '½ Hybrid Individual', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 800, preventa: 900, regular: 1000 }, msi: true, precioUnidad: 'por persona', incluyeChip: true },
   { code: 'HALF-DOB-MM', nombre: '½ Hybrid Dobles Mujeres',      bloque: 'EXPERIENCE', tipo: '½ Hybrid Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 1600, preventa: 1800, regular: 2000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
   { code: 'HALF-DOB-HH', nombre: '½ Hybrid Dobles Hombres',      bloque: 'EXPERIENCE', tipo: '½ Hybrid Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 1600, preventa: 1800, regular: 2000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
   { code: 'HALF-DOB-MH', nombre: '½ Hybrid Dobles Mixto',        bloque: 'EXPERIENCE', tipo: '½ Hybrid Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 1600, preventa: 1800, regular: 2000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
 
-  // ── EXPERIENCE — Workout Experience — Sábado 10 · Día completo · $350 fijo ──
+  // ── EXPERIENCE — Workout Experience — Sábado 14 · Día completo · $350 fijo ──
   { code: 'WOD-M', nombre: 'Workout Experience Mujer',   bloque: 'EXPERIENCE', tipo: 'Workout Experience', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: 350, msi: false, precioUnidad: 'por persona', incluyeChip: false },
   { code: 'WOD-H', nombre: 'Workout Experience Hombre',  bloque: 'EXPERIENCE', tipo: 'Workout Experience', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: 350, msi: false, precioUnidad: 'por persona', incluyeChip: false },
 

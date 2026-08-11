@@ -390,10 +390,10 @@ function getProductIcon(tipo: string, size = 40) {
 }
 
 const DIA_FECHA: Record<string, string> = {
-  Viernes: 'VIERNES 9',
-  Sábado: 'SÁBADO 10',
-  Domingo: 'DOMINGO 11',
-  'Vie-Dom': 'VIE 9 – DOM 11',
+  Viernes: 'VIERNES 13',
+  Sábado: 'SÁBADO 14',
+  Domingo: 'DOMINGO 15',
+  'Vie-Dom': 'VIE 13 – DOM 15',
 }
 
 const DIA_SLUG: Record<string, string> = {
@@ -2913,7 +2913,7 @@ export default function LandingPage() {
                   mb: 2,
                 }}
               >
-                9-11 OCT
+                13-15 NOV
               </Typography>
 
               {/* Venue name */}
