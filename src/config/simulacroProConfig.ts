@@ -3,4 +3,4 @@
 // solicitudes, a criterio de la Direccion Deportiva. Apagarlo NO debe
 // afectar el resto de la landing — el componente simplemente no se
 // renderiza cuando esta en false.
-export const SIMULACRO_PRO_ACTIVE = true
+export const SIMULACRO_PRO_ACTIVE = false

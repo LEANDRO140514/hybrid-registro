@@ -45,10 +45,10 @@ const EVENT_JSON_LD = {
   '@type': 'Event',
   name: eventConfig.name,
   description:
-    'Vive HYBRID EXPERIENCE del 9 al 11 de octubre de 2026 en Mérida. Compite en Individual, Dobles o Relay, empieza con ½ Hybrid y Workout Experience, o compra tu acceso como público.',
+    'Vive HYBRID EXPERIENCE del 13 al 15 de noviembre de 2026 en Mérida. Compite en Individual, Dobles o Relay, empieza con ½ Hybrid y Workout Experience, o compra tu acceso como público.',
   url: 'https://hybrid-registro.enforma.mx/',
-  startDate: '2026-10-09T17:00:00-06:00',
-  endDate: '2026-10-11',
+  startDate: '2026-11-13T17:00:00-06:00',
+  endDate: '2026-11-15',
   eventStatus: 'https://schema.org/EventScheduled',
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   location: {
@@ -330,6 +330,10 @@ const IMG_FOTOGRAFO =
   'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/media%2Ffotografos-cubriendo-carrera-w800.webp?v=df02c6283432f9fb887436449c5a12c1'
 const IMG_WORKOUT =
   'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/stations%2Festacion-skierg-concept2-w800.webp?v=f5ff3662c86ba60a6b2f7f8f52cdb14e'
+const IMG_WORKOUT_HOMBRE =
+  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/workout%2Fworkout-atleta-hombre-w600.webp?v=080575586a60e80938d84ab10c861264'
+const IMG_WORKOUT_MUJER =
+  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/workout%2Fworkout-atleta-mujer-w800.webp?v=a748115eb4fff6a76ecf16d762879831'
 
 // Keyed by product code (not just tipo) since COMPITE/EXPERIENCE have gender-specific photography.
 const PRODUCT_IMAGES: Record<string, string> = {
@@ -351,8 +355,8 @@ const PRODUCT_IMAGES: Record<string, string> = {
   'HALF-DOB-HH': IMG_DOBLES_HOMBRES,
   'HALF-DOB-MH': IMG_DOBLES_MIXTO,
   // EXPERIENCE — Workout
-  'WOD-M': IMG_WORKOUT,
-  'WOD-H': IMG_WORKOUT,
+  'WOD-M': IMG_WORKOUT_MUJER,
+  'WOD-H': IMG_WORKOUT_HOMBRE,
   // ASISTE — Público
   'PUB-VIE': IMG_PUBLICO,
   'PUB-SAB': IMG_PUBLICO,
@@ -430,7 +434,7 @@ interface TresDiasItem {
 
 const TRES_DIAS: TresDiasItem[] = [
   {
-    fecha: 'VIERNES 9',
+    fecha: 'VIERNES 13',
     sesion: 'Vespertino',
     titulo: 'Arranca la competencia',
     texto: 'Dobles Mujeres e Individual (Open) abren la competencia. La energía del primer día.',
@@ -440,7 +444,7 @@ const TRES_DIAS: TresDiasItem[] = [
     ],
   },
   {
-    fecha: 'SÁBADO 10',
+    fecha: 'SÁBADO 14',
     sesion: 'Día completo',
     titulo: 'El día más abierto',
     texto:
@@ -451,7 +455,7 @@ const TRES_DIAS: TresDiasItem[] = [
     ],
   },
   {
-    fecha: 'DOMINGO 11',
+    fecha: 'DOMINGO 15',
     sesion: 'Matutino',
     titulo: 'Relay',
     texto: 'Cuatro atletas, un solo tiempo. El cierre del evento con el formato más social y de mayor ambiente.',
@@ -1022,17 +1026,6 @@ const OPEN_DATA = [
   { name: 'Wall Balls', distance: '100 repeticiones', weight: '6kg / 4kg' },
 ]
 
-const PRO_DATA = [
-  { name: 'Ski Erg', distance: '1000 m', weight: '—' },
-  { name: 'Sled Push', distance: '4 × 12,5 m (50 m)', weight: '202kg / 152kg' },
-  { name: 'Sled Pull', distance: '4 × 12,5 m (50 m)', weight: '153kg / 103kg' },
-  { name: 'Burpee Broad Jumps', distance: '80 m', weight: '—' },
-  { name: 'Remo', distance: '1000 m', weight: '—' },
-  { name: 'Farmers Carry', distance: '200 m', weight: '2 × 32kg / 2 × 24kg' },
-  { name: 'Sandbag Lunges', distance: '100 m', weight: '30kg / 20kg' },
-  { name: 'Wall Balls', distance: '100 repeticiones', weight: '9kg / 6kg' },
-]
-
 // ── Navbar ───────────────────────────────────────────────────────
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -1226,7 +1219,7 @@ function OrganizerStrip() {
           textTransform: 'uppercase',
         }}
       >
-        Organizado por ENFORMA Sports Society · Mérida, Yucatán · 9, 10 y 11 de octubre de 2026
+        Organizado por ENFORMA Sports Society · Mérida, Yucatán · 13, 14 y 15 de noviembre de 2026
       </Typography>
     </Box>
   )
@@ -1344,10 +1337,8 @@ function SalesStatusBanner() {
 
 export default function LandingPage() {
   const etapaActual = resolveEtapaComercial()
-  const targetDate = useMemo(() => new Date('2026-10-09T17:00:00'), [])
+  const targetDate = useMemo(() => new Date('2026-11-13T17:00:00'), [])
   const timeLeft = useCountdown(targetDate)
-  const [desafioTab, setDesafioTab] = useState(0)
-  const currentData = desafioTab === 0 ? OPEN_DATA : PRO_DATA
   const [showBackToTop, setShowBackToTop] = useState(false)
 
   useEffect(() => {
@@ -1520,7 +1511,7 @@ export default function LandingPage() {
           variant="body2"
           sx={{ color: 'text.secondary', letterSpacing: '0.15em', textTransform: 'uppercase' }}
         >
-          9-11 OCTUBRE 2026 • MÉRIDA YUCATÁN
+          13-15 NOVIEMBRE 2026 • MÉRIDA YUCATÁN
         </Typography>
       </Box>
 
@@ -1728,7 +1719,7 @@ export default function LandingPage() {
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
-                  Sábado 10 · Día completo · {formatPrecio(350)}
+                  Sábado 14 · Día completo · {formatPrecio(350)}
                 </Typography>
                 <Typography
                   variant="body1"
@@ -1782,7 +1773,7 @@ export default function LandingPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              Formato by ENFORMA · Sábado 10 Día completo
+              Formato by ENFORMA · Sábado 14 Día completo
             </Typography>
             <Typography
               variant="body1"
@@ -1860,62 +1851,6 @@ export default function LandingPage() {
             como fuerza funcional.
           </Typography>
 
-          {/* Tabs */}
-          <Box
-            sx={{
-              display: 'flex',
-              borderBottom: '1px solid rgba(230,242,177,0.2)',
-              mb: 4,
-            }}
-          >
-            <Box
-              onClick={() => setDesafioTab(0)}
-              sx={{
-                px: 4,
-                py: 1.5,
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                color: desafioTab === 0 ? '#E6F2B1' : 'rgba(255,255,255,0.35)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                borderBottom: '2px solid',
-                borderBottomColor: desafioTab === 0 ? '#E6F2B1' : 'transparent',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                userSelect: 'none',
-                '&:hover': {
-                  color: '#E6F2B1',
-                },
-              }}
-            >
-              OPEN
-            </Box>
-            <Box
-              onClick={() => setDesafioTab(1)}
-              sx={{
-                px: 4,
-                py: 1.5,
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                color: desafioTab === 1 ? '#E6F2B1' : 'rgba(255,255,255,0.35)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                borderBottom: '2px solid',
-                borderBottomColor: desafioTab === 1 ? '#E6F2B1' : 'transparent',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                userSelect: 'none',
-                '&:hover': {
-                  color: '#E6F2B1',
-                },
-              }}
-            >
-              PRO
-            </Box>
-          </Box>
-
           {/* Data Table */}
           <Box
             sx={{
@@ -1956,7 +1891,7 @@ export default function LandingPage() {
             </Box>
 
             {/* Table rows */}
-            {currentData.map((row, i) => (
+            {OPEN_DATA.map((row, i) => (
               <Box
                 key={i}
                 sx={{
@@ -1964,7 +1899,7 @@ export default function LandingPage() {
                   flexDirection: { xs: 'column', sm: 'row' },
                   gridTemplateColumns: { sm: '1fr 120px 110px' },
                   borderBottom:
-                    i < currentData.length - 1
+                    i < OPEN_DATA.length - 1
                       ? '1px solid rgba(230,242,177,0.08)'
                       : 'none',
                   bgcolor:
@@ -2153,7 +2088,7 @@ export default function LandingPage() {
 
           <Grid container spacing={3}>
             {/* Open */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box
                 sx={{
                   p: 3,
@@ -2196,51 +2131,8 @@ export default function LandingPage() {
               </Box>
             </Grid>
 
-            {/* Pro */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box
-                sx={{
-                  p: 3,
-                  border: '1px solid rgba(230,242,177,0.15)',
-                  height: '100%',
-                  position: 'relative',
-                }}
-              >
-                <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                  <CornerBrackets size={14} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                  <ArrowRight size={18} />
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontWeight: 900,
-                      color: '#E6F2B1',
-                      letterSpacing: '0.03em',
-                    }}
-                  >
-                    PRO
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'text.secondary',
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    lineHeight: 1.8,
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  Categoría individual de alto rendimiento — actualmente en evaluación como
-                  Simulacro Pro. Pesos incrementados y mayor exigencia física, para atletas con
-                  experiencia comprobable. Deja tus datos en Simulacro Pro si te interesa.
-                </Typography>
-              </Box>
-            </Grid>
-
             {/* Doubles */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box
                 sx={{
                   p: 3,
@@ -2283,7 +2175,7 @@ export default function LandingPage() {
             </Grid>
 
             {/* Relay */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box
                 sx={{
                   p: 3,
@@ -2484,6 +2376,23 @@ export default function LandingPage() {
               </Box>
             ))}
           </Stack>
+
+          <Typography
+            sx={{
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.85)',
+              fontWeight: 600,
+              fontSize: { xs: '0.95rem', sm: '1.05rem' },
+              lineHeight: 1.6,
+              maxWidth: 560,
+              mx: 'auto',
+              mt: 4,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Los heats y horarios de cada categoría se definen según el volumen de inscripciones.
+            Los cupos son limitados por categoría: inscribirte a tiempo asegura tu lugar.
+          </Typography>
         </Container>
       </Box>
 
@@ -2726,7 +2635,7 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Viernes 9 — Vespertino
+            Viernes 13 — Vespertino
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mb: 6 }}>
             <PrizeTable title="INDIVIDUAL MUJERES OPEN" rows={INDIVIDUAL_PRIZES} />
@@ -2748,7 +2657,7 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Sábado 10 — Día completo
+            Sábado 14 — Día completo
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mb: 3 }}>
             <PrizeTable title="DOBLES HOMBRES OPEN" rows={DOBLES_PRIZES} />
@@ -2783,7 +2692,7 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Domingo 11 — Matutino
+            Domingo 15 — Matutino
           </Typography>
           <Typography
             variant="body2"
