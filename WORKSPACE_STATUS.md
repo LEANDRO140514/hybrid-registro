@@ -381,6 +381,28 @@ No se dio por buena la palabra del dashboard: se descargó el bundle que sirve `
 
 ---
 
+# Fase RELANZAMIENTO-NOVIEMBRE-01 (2026-08-08 → 2026-08-11) — CERRADA *(nombre retroactivo)*
+
+- **Origen:** sesión retomada tras corte por límite de contexto de la conversación anterior ("Landing de inscripción y pago HYBRID", archivada). Se reconstruyó el contexto vía `HANDOFF-2026-08-08.md` (ya en el repo desde el commit `39237ac`) más lectura directa del transcript archivado.
+- **Motivo:** el evento cambia de fecha — de 9-11 octubre a **13, 14 y 15 de noviembre de 2026**. Sede, horarios/estructura del itinerario y categorías/precios se confirmaron **sin cambios** por el usuario; solo la fecha se mueve. Coincide que ambos rangos caen Viernes/Sábado/Domingo, así que no hubo que reestructurar el `TRES_DIAS`/`DIA_FECHA`, solo sustituir los números de día y el mes.
+- **Commits (2, ambos publicados en `origin/main`):**
+
+| Commit | Fecha | Contenido |
+|---|---|---|
+| `39237ac` | 2026-08-08 | Reactiva la holding page con el mensaje de nueva fecha (copy completo provisto por el usuario) + upgrade de "Lista HYBRID": campo `modalidad` (Individual/En equipo/Aún decidiendo) en el formulario de espera, migración `20260808120000_add-modalidad-lista-espera.sql` aplicada a InsForge. `HOLDING_MODE_ACTIVE` → `true`. |
+| `a4883c7` | 2026-08-11 | Migra la fecha a todo el sitio (JSON-LD, hero, countdown, footer, timeline TRES DÍAS, encabezados de PREMIOS, meta tags de `index.html`, manifest PWA en `vite.config.ts`); agrega nota FOMO de heats/horarios en TRES DÍAS (ajustada una vez a petición del usuario: texto final + tipografía más grande y legible); **elimina la categoría PRO** de la página pública; **apaga la holding page** (`HOLDING_MODE_ACTIVE` → `false`); conecta fotos dedicadas para las cards de Workout Experience Hombre/Mujer. |
+
+- **Detalle — eliminación de PRO:** `SIMULACRO_PRO_ACTIVE` → `false` en `src/config/simulacroProConfig.ts` (interruptor diseñado para esto — comentario original: *"Apagarlo NO debe afectar el resto de la landing"*; **código y tabla `hybrid_registro_simulacro_pro` en InsForge NO se borraron**, quedan disponibles si se reconsidera). Además, dos piezas de contenido estático que sí requerían edición porque no dependían del flag: el toggle OPEN/PRO en "El Desafío" (se quitó `PRO_DATA` y el selector de tabs; la tabla de pesos/distancias ahora muestra directamente los datos de OPEN) y la tarjeta "PRO" en FORMATOS (se quitó; quedan 3 tarjetas OPEN/DOUBLES/RELAY, grid reacomodado a 3 columnas en desktop).
+- **Detalle — fotos de Workout:** el usuario ya había corrido su pipeline de optimización de imágenes sobre dos fotos (atleta hombre y mujer cargando sandbag) — se encontraron localmente en `C:\Users\vonde\Downloads\workout-optimizado\` (variantes webp responsivas + manifiestos `IMAGE_URLS.ts`/`INDEX_PROD.json`/`urls.txt`), **nunca publicadas** (`"url": null` / `"(no publicado)"` en todo el manifiesto). Se subieron a InsForge Storage, bucket `images`, carpeta nueva `workout/` (mismo patrón de carpetas que `individual/`, `doubles/`, `relay/`, etc.): `workout/workout-atleta-hombre-w600.webp` y `workout/workout-atleta-mujer-w800.webp`. Antes, `WOD-H`/`WOD-M` compartían la foto genérica de la estación SkiErg (`IMG_WORKOUT`); ahora tienen foto propia por género.
+- **Hallazgo colateral, no accionado esta fase:** las 17 URLs de InsForge usadas en `hybrid-event-landing/src/pages/LandingPage.tsx` (repo hermano) siguen hardcodeadas como constantes de string en vez de construirse desde `VITE_MEDIA_BASE_URL` + object path — deuda arquitectónica ya documentada en el acta de ese otro repo, confirmada de nuevo aquí, no resuelta.
+- **Verificación:** `npm run build` (`tsc -b && vite build`) y `npm run lint` (oxlint) limpios después de cada commit — único warning: el preexistente de `src/main.tsx:20` (no tocado). Verificado en navegador real (Playwright, dev server) en cada paso: copy de la holding page y su formulario (incluido el envío de prueba del toggle de modalidad sin llegar a insertar fila real); fecha nueva visible en las 8 secciones que la mencionaban; ausencia de "SIMULACRO PRO"/"PRO" en nav, FORMATOS y "El Desafío"; las dos fotos de Workout cargando en la card correcta. 0 errores de consola en todos los checks.
+- **Estado comercial resultante:** `SALES_CONFIG.status = 'open'` (sin tocar en esta fase — la venta sigue abierta, ahora bajo la fecha de noviembre), `HOLDING_MODE_ACTIVE = false`, `SIMULACRO_PRO_ACTIVE = false`. Etapa comercial vigente: **lanzamiento** (hasta 2026-08-31 según `pricingStage.ts`, sin cambios). Tienda: sigue deshabilitada ("SHOP · PRONTO"), sin cambios.
+- **⚠️ Nota operativa:** al quedar `status='open'` y `HOLDING_MODE_ACTIVE=false` simultáneamente, el sitio quedó **recibiendo inscripciones reales de inmediato** bajo la nueva fecha, con los mismos links de Mercado Pago/Clip de antes (el pipeline de pago no se tocó esta fase). No se verificó en esta fase si algún registro nuevo llegó ya bajo la fecha de noviembre.
+- **Known issues:** (ninguno nuevo)
+- **Next Authorized Phase:** (ninguna abierta — awaiting instrucción)
+
+---
+
 ```
 === NEXT_SESSION_BOOTSTRAP ===
 Workspace: C:\vonde\enforma-sys\hybrid-registro
@@ -390,13 +412,13 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: 7fc25f9 (working tree CLEAN, synced with origin/main)
-Last Commits: 7fc25f9 feat(ui): disable SHOP button, align inscription form copy | b96ecc4 docs(workspace): close PLANB-CLIP-PAYMENT-01 Frente A | 0db9e99 feat(payment): hide QR/PDF until payment confirmed
-Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO)
-Open Phase: (none) — PLANB-CLIP-PAYMENT-01 Frente A completo y en produccion. Frente B no abierto.
+HEAD: a4883c7 (working tree CLEAN, synced with origin/main)
+Last Commits: a4883c7 feat(relaunch): new date (13-15 nov), remove PRO, workout card photos | 39237ac feat(holding): reactivate pausa with new date (13-15 nov) + Lista HYBRID upgrade | b21ad87 docs(workspace): correct acta — Frente A is deployed, not local-only
+Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO)
+Open Phase: (none) — RELANZAMIENTO-NOVIEMBRE-01 completo y en produccion. Frente B (de PLANB-CLIP-PAYMENT-01) sigue sin abrir.
 Gate: PHASE_COMPLETE
-Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Etapa vigente: lanzamiento (hasta 2026-08-31 segun pricingStage.ts). Simulacro Pro: ACTIVO. Tienda: DESHABILITADA ("SHOP · PRONTO").
-DEPLOY STATE: todo publicado y verificado contra el dominio productivo el 2026-08-07. Edge function send-registration-email desplegada (version honesta, sin adjuntos). origin/main = 7fc25f9. Bundle en produccion coincide en hash con el build local. Pagos activos: Mercado Pago + Clip (Clip solo en etapa lanzamiento, por guard).
+Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026 (antes 9-11 octubre; sede/horarios/categorias sin cambio). Etapa vigente: lanzamiento (hasta 2026-08-31 segun pricingStage.ts, sin tocar esta fase). Simulacro Pro: INACTIVO (SIMULACRO_PRO_ACTIVE=false, codigo/tabla conservados). Categoria PRO: eliminada de la pagina publica (Desafio y Formatos). Tienda: DESHABILITADA ("SHOP · PRONTO").
+DEPLOY STATE: RELANZAMIENTO-NOVIEMBRE-01 publicado y verificado en dev/build local (Playwright) el 2026-08-11; NO se re-verifico contra el dominio productivo con diff de hash como se hizo para Frente A — pendiente si se quiere el mismo nivel de evidencia. origin/main = a4883c7. Pagos activos: Mercado Pago + Clip (Clip solo en etapa lanzamiento, por guard) — pipeline de pago sin cambios esta fase.
 Publish order (para futuros cambios que toquen el correo):
   1. npx @insforge/cli functions deploy send-registration-email --file functions/send-registration-email.ts
   2. git push   (dispara deploy de Vercel)
@@ -409,17 +431,22 @@ Known Issues:
   5. Codigo huerfano heredado del clon, sin importadores o ajeno al flujo Plan B: src/api/checkout.ts, src/lib/submitLock.ts, src/api/orderStatus.ts, src/config/checkoutConfig.ts, src/lib/checkoutSession.ts, src/pages/CheckoutConfirmPage.tsx (ruta /checkout/confirmando).
   6. 7 edge functions huerfanas activas en InsForge del proyecto anterior (merch-checkout, spectator-checkout, stripe-webhook, mp-webhook, ghl-notify, registration-status, create-checkout) — sin versionar en este repo.
   7. Registros previos al reordenamiento de itinerario conservan el dia anterior (ej. Dobles Hombres: viernes -> sabado). Requiere aviso manual al confirmar pago.
-  8. Las 26 inscripciones existentes siguen en status='pending'; ningun pago se ha marcado como confirmado.
-  9. Parchear window.fetch NO aisla al SDK de InsForge (captura su propia referencia al cargar el modulo). Verificar la vista 'done' sin escribir en la base requiere otra via; ver "Incidente registrado" en la fase.
+  8. Las inscripciones previas a esta fase seguian en status='pending'; ningun pago se habia marcado como confirmado. No verificado si hay inscripciones nuevas ya bajo la fecha de noviembre.
+  9. Parchear window.fetch NO aisla al SDK de InsForge (captura su propia referencia al cargar el modulo). Verificar la vista 'done' sin escribir en la base requiere otra via; ver "Incidente registrado" en la fase PLANB-CLIP-PAYMENT-01.
  10. Tienda deshabilitada: DOMAINS.shop ya no se importa en LandingPage.tsx. Al reactivarla hay que reponer el import, el onClick y quitar el disabled (escritorio y menu movil).
+ 11. Las URLs de InsForge en el repo hermano hybrid-event-landing (17 en LandingPage.tsx) siguen hardcodeadas en vez de VITE_MEDIA_BASE_URL + object path — deuda confirmada de nuevo esta fase, no resuelta, y es de OTRO repo.
   RESUELTO en Frente A: el PDF ya no dice "Registro confirmado" antes de pagar; el copy del formulario ya no promete boleto inmediato.
+  RESUELTO en RELANZAMIENTO-NOVIEMBRE-01: fecha del evento actualizada en todo el sitio; categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero (antes compartian la generica de SkiErg).
 Pending Decisions:
   1. Frente B (QR/PDF server-side, ticket_sent_at, schedule que dispare boleto al marcar 'paid'): fase futura, sin abrir.
   2. Links de Clip vencen funcionalmente el 2026-08-31 (fin de lanzamiento): pedir a Paulina los links de preventa antes de esa fecha y actualizar clipLinks.ts.
   3. Cuando abra shop.enforma.mx: reactivar el boton SHOP.
+  4. Si se quiere borrar (no solo apagar) el codigo/tabla de Simulacro Pro, o dejarlo togglable como esta.
+  5. Centralizar las URLs de InsForge de hybrid-event-landing via VITE_MEDIA_BASE_URL (repo hermano, fuera de este workspace).
+  6. Verificar contra el dominio productivo (hash de bundle) que RELANZAMIENTO-NOVIEMBRE-01 quedo exactamente como se probo en local — no se hizo esta fase.
 Protected Sources: (none)
-Next Authorized Phase: (ninguna abierta). El Frente A esta completo y en produccion. Lo siguiente probable es el Frente B, o la actualizacion de links de Clip para preventa antes del 2026-08-31.
-Files To Read First: WORKSPACE_STATUS.md, src/config/clipLinks.ts, src/config/paymentLinks.ts, src/pages/InscribirPage.tsx, functions/send-registration-email.ts, src/config/pricingStage.ts, src/data/catalogo.ts
+Next Authorized Phase: (ninguna abierta). Lo siguiente probable es el Frente B de PLANB-CLIP-PAYMENT-01, la actualizacion de links de Clip para preventa antes del 2026-08-31, o verificacion contra produccion del relanzamiento.
+Files To Read First: WORKSPACE_STATUS.md, src/config/pricingStage.ts, src/data/catalogo.ts, src/config/holdingMode.ts, src/config/simulacroProConfig.ts, src/pages/LandingPage.tsx, src/config/clipLinks.ts, src/config/paymentLinks.ts
 Forbidden Actions: push sin autorizacion expresa; modificar los 10 links de Mercado Pago (los genera el usuario a mano); tocar el flujo de confirmacion por WhatsApp; commitear credenciales; exponer la API key de InsForge en frontend; flipear HOLDING_MODE_ACTIVE o SALES_CONFIG.status sin autorizacion; mover imagenes a public/; usar signed URLs para medios publicos
 Media Constraints: vigentes por herencia — ver "Media Constraints" en la historia heredada
 First Command: git status && git log --oneline -5
