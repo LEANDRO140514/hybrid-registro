@@ -401,6 +401,26 @@ No se dio por buena la palabra del dashboard: se descargó el bundle que sirve `
 - **Known issues:** (ninguno nuevo)
 - **Next Authorized Phase:** (ninguna abierta — awaiting instrucción)
 
+## Correctivo externo — commit `07b731d` (2026-08-11, fuera de esta sesión)
+
+- **No es trabajo de esta sesión.** Commit hecho directamente por el usuario, co-autoría con otra sesión de Claude ("Fable"), detectado al revisar `git log` antes de un push posterior. Se documenta aquí solo para que el acta describa la realidad física del repo — nadie de esta sesión lo escribió ni lo revisó en el momento.
+- **`fix(landing): correct stale Oct event dates to Nov 13-15 and document sales calendar`** — corrige algo que `RELANZAMIENTO-NOVIEMBRE-01` había dejado pasar: la sección **Ubicación** y el mapeo **`DIA_FECHA`** en `LandingPage.tsx` seguían mostrando octubre. También extiende `src/config/pricingStage.ts` con el calendario comercial completo: **lanzamiento 11–31 ago, preventa 1–30 sep, regular 1 oct – 7 nov** (cierre operado a mano cambiando `SALES_CONFIG.status` a `'closed'` ese día — no hay automatismo por fecha).
+- **Pendiente señalado en el propio commit, no resuelto:** la imagen social (`hybrid-experience-social.jpg`, usada en `og:image`) tiene la fecha vieja de octubre horneada en el diseño gráfico — requiere que el equipo de diseño la regenere; no es algo que se arregle con código.
+- **Archivos tocados:** `src/config/pricingStage.ts`, `src/data/catalogo.ts`, `src/pages/LandingPage.tsx`.
+
+## Fase FRENTE-B-LITE-01 (2026-08-12) — primera pieza de Frente B construida y en uso
+
+- **Disparador:** primer pago real del relanzamiento. El usuario confirmó por su cuenta (fuera del sistema, vía Mercado Pago) el pago de **Erika Ariadna Rivero Pérez** (`HEX-B43006D5`, id `b43006d5-a4ba-4e02-ba47-cf4cd2ab6d0f`, categoría **Dobles Mujeres**, equipo **Kikas**, **$2,500 MXN**) y pidió que el correo de confirmación se enviara — expuso en vivo la brecha ya documentada: marcar `status='paid'` no dispara nada, y `send-registration-email` solo sabe mandar el aviso de pre-pago.
+- **Acción manual sobre el dato:** `UPDATE hybrid_registro_inscripciones SET status='paid', mp_payment_id='173447302044', notes='Pago confirmado manualmente via Mercado Pago' WHERE id='b43006d5-…'` — corrido directo en InsForge (`db query`), confirmado con el usuario antes de ejecutar (registro localizado, método de pago y referencia verbalmente confirmados).
+- **Construido: función nueva `send-payment-confirmation`** (`functions/send-payment-confirmation.ts`, InsForge Deno Subhosting, `npm:jspdf` + `npm:qrcode`). Es la primera pieza real de **Frente B** (antes "sin abrir"):
+  - Genera el PDF del boleto **en el momento de invocarla** (no hay generación client-side ni persistencia previa): franja de marca, "Tu pago fue confirmado", categoría/equipo/monto/participantes/fecha/referencia, la **foto de la card de la categoría** (fetch server-side de la URL de InsForge Storage, incrustada en el PDF) y un **QR de verificación** (mismo texto que codificaba `qrTicket.ts` del lado cliente, ahora generado en servidor).
+  - Envía por Resend con el PDF adjunto — mismo remitente y patrón de `send-registration-email`, pero copy de confirmación en vez de pendiente-de-pago.
+  - **Deliberadamente admin-only:** sin CORS ni wiring al frontend público. Se invoca a mano — `npx @insforge/cli functions invoke send-payment-confirmation --data '{...}'` — después de marcar `status='paid'`. Esto sigue siendo manual (alguien tiene que correr el comando), pero reemplaza "redactar un correo a mano" por un comando de 10 segundos con boleto real adjunto. No confunde con automatización por trigger/webhook — sigue sin existir.
+  - **No incluida en este alcance:** persistencia del PDF/QR en InsForge Storage, campo de control tipo `ticket_sent_at` para evitar reenvíos duplicados, disparo automático al cambiar `status`. Esas piezas del Frente B original siguen sin construir.
+- **Verificación:** invocación real contra producción (no hay entorno de prueba separado para esta función) — `npx @insforge/cli logs function.logs` confirmó `POST send-payment-confirmation 200 956ms`, sin errores. Correo entregado a `ariadnarivero@hotmail.com` vía Resend (id `096e11da-9a5f-4991-aac6-55d2f2b84801`).
+- **Commit:** `3c5b435` — `feat(payment): add admin-only payment confirmation email with PDF ticket`. Publicado en `origin/main`.
+- **Next Authorized Phase:** (ninguna abierta). Completar Frente B (persistencia, disparo automático, control de duplicados) sigue como trabajo futuro — ver Pending Decisions.
+
 ---
 
 ```
@@ -412,42 +432,49 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: a4883c7 (working tree CLEAN, synced with origin/main)
-Last Commits: a4883c7 feat(relaunch): new date (13-15 nov), remove PRO, workout card photos | 39237ac feat(holding): reactivate pausa with new date (13-15 nov) + Lista HYBRID upgrade | b21ad87 docs(workspace): correct acta — Frente A is deployed, not local-only
-Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO)
-Open Phase: (none) — RELANZAMIENTO-NOVIEMBRE-01 completo y en produccion. Frente B (de PLANB-CLIP-PAYMENT-01) sigue sin abrir.
+HEAD: 3c5b435 (working tree CLEAN, synced with origin/main)
+Last Commits: 3c5b435 feat(payment): add admin-only payment confirmation email with PDF ticket | 07b731d fix(landing): correct stale Oct event dates to Nov 13-15 and document sales calendar [usuario + otra sesion, no de esta] | 08146fd docs(workspace): close RELANZAMIENTO-NOVIEMBRE-01
+Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida y en uso)
+Open Phase: (none). Frente B completo (persistencia, disparo automatico, control de duplicados) sigue sin construir — solo existe su primera pieza (envio manual con PDF).
 Gate: PHASE_COMPLETE
-Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026 (antes 9-11 octubre; sede/horarios/categorias sin cambio). Etapa vigente: lanzamiento (hasta 2026-08-31 segun pricingStage.ts, sin tocar esta fase). Simulacro Pro: INACTIVO (SIMULACRO_PRO_ACTIVE=false, codigo/tabla conservados). Categoria PRO: eliminada de la pagina publica (Desafio y Formatos). Tienda: DESHABILITADA ("SHOP · PRONTO").
-DEPLOY STATE: RELANZAMIENTO-NOVIEMBRE-01 publicado y verificado en dev/build local (Playwright) el 2026-08-11; NO se re-verifico contra el dominio productivo con diff de hash como se hizo para Frente A — pendiente si se quiere el mismo nivel de evidencia. origin/main = a4883c7. Pagos activos: Mercado Pago + Clip (Clip solo en etapa lanzamiento, por guard) — pipeline de pago sin cambios esta fase.
-Publish order (para futuros cambios que toquen el correo):
-  1. npx @insforge/cli functions deploy send-registration-email --file functions/send-registration-email.ts
-  2. git push   (dispara deploy de Vercel)
-  Publicar el frontend sin desplegar la funcion no rompe nada, pero deja el correo con el texto viejo. No invertir el orden.
+Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026. Calendario comercial (pricingStage.ts, ampliado en 07b731d): lanzamiento 11-31 ago, preventa 1-30 sep, regular 1 oct - 7 nov (cierre manual via status='closed', sin automatismo por fecha). Simulacro Pro: INACTIVO. Categoria PRO: eliminada de la UI publica. Tienda: DESHABILITADA ("SHOP · PRONTO"). Primer pago real confirmado y con boleto enviado: Erika Rivero, HEX-B43006D5, Dobles Mujeres, $2,500 MXN via Mercado Pago (ref 173447302044).
+DEPLOY STATE: origin/main = 3c5b435. RELANZAMIENTO-NOVIEMBRE-01 no se reverifico contra el dominio productivo con diff de hash (pendiente). La funcion send-payment-confirmation SI se verifico contra produccion real (es la unica forma de probarla) — log confirmado 200 OK, correo entregado via Resend.
+Publish order (para futuros cambios que toquen correo):
+  1. npx @insforge/cli functions deploy <slug> --file functions/<slug>.ts   (send-registration-email o send-payment-confirmation, segun cual se edite)
+  2. git push   (dispara deploy de Vercel, solo aplica a cambios de frontend)
+  Publicar el frontend sin desplegar la funcion no rompe nada, pero deja el correo con el codigo/texto viejo. No invertir el orden.
+How to confirm a payment right now (hasta que exista Frente B completo):
+  1. Ubicar el registro: npx @insforge/cli db query "SELECT * FROM hybrid_registro_inscripciones WHERE id::text ILIKE '<primeros 8 chars del HEX>%'" --json
+  2. Confirmar con el usuario: metodo de pago + referencia (o dejar notes sin ID si no la tiene).
+  3. UPDATE ... SET status='paid', mp_payment_id='<ref>', notes='...' WHERE id='<uuid completo>'
+  4. npx @insforge/cli functions invoke send-payment-confirmation --data '{"to":"...","contactName":"...","categoryName":"...","teamName":"...","amountLabel":"$X,XXX MXN","participants":["..."],"registrationId":"<uuid>","eventDateLabel":"13, 14 y 15 de noviembre de 2026","cardImageUrl":"<URL IMG_* de la categoria en LandingPage.tsx>"}'   (JSON en una sola linea, el CLI no tolera saltos de linea en --data)
 Known Issues:
-  1. QR/PDF se generan 100% en cliente y no se persisten — bloquea el envio de boleto post-pago (Frente B).
-  2. Edge function send-registration-email es publica y sin autenticacion.
-  3. Sin campo de control de envio de boleto (riesgo de duplicados en un futuro disparo automatico).
-  4. Correo fire-and-forget: no se verifica ni registra la entrega.
-  5. Codigo huerfano heredado del clon, sin importadores o ajeno al flujo Plan B: src/api/checkout.ts, src/lib/submitLock.ts, src/api/orderStatus.ts, src/config/checkoutConfig.ts, src/lib/checkoutSession.ts, src/pages/CheckoutConfirmPage.tsx (ruta /checkout/confirmando).
+  1. Persistencia del PDF/QR y disparo automatico al marcar 'paid' siguen sin existir — send-payment-confirmation es invocacion manual, no trigger/webhook.
+  2. Edge function send-registration-email sigue publica y sin autenticacion (send-payment-confirmation NO tiene este problema: no tiene CORS ni wiring publico).
+  3. Sin campo de control de envio de boleto (riesgo de reenvios duplicados si se invoca dos veces para el mismo registro).
+  4. Correo fire-and-forget en ambas funciones: no se verifica ni registra la entrega mas alla del log de invocacion.
+  5. Codigo huerfano heredado del clon, sin importadores: src/api/checkout.ts, src/lib/submitLock.ts, src/api/orderStatus.ts, src/config/checkoutConfig.ts, src/lib/checkoutSession.ts, src/pages/CheckoutConfirmPage.tsx (ruta /checkout/confirmando).
   6. 7 edge functions huerfanas activas en InsForge del proyecto anterior (merch-checkout, spectator-checkout, stripe-webhook, mp-webhook, ghl-notify, registration-status, create-checkout) — sin versionar en este repo.
   7. Registros previos al reordenamiento de itinerario conservan el dia anterior (ej. Dobles Hombres: viernes -> sabado). Requiere aviso manual al confirmar pago.
-  8. Las inscripciones previas a esta fase seguian en status='pending'; ningun pago se habia marcado como confirmado. No verificado si hay inscripciones nuevas ya bajo la fecha de noviembre.
-  9. Parchear window.fetch NO aisla al SDK de InsForge (captura su propia referencia al cargar el modulo). Verificar la vista 'done' sin escribir en la base requiere otra via; ver "Incidente registrado" en la fase PLANB-CLIP-PAYMENT-01.
- 10. Tienda deshabilitada: DOMAINS.shop ya no se importa en LandingPage.tsx. Al reactivarla hay que reponer el import, el onClick y quitar el disabled (escritorio y menu movil).
- 11. Las URLs de InsForge en el repo hermano hybrid-event-landing (17 en LandingPage.tsx) siguen hardcodeadas en vez de VITE_MEDIA_BASE_URL + object path — deuda confirmada de nuevo esta fase, no resuelta, y es de OTRO repo.
-  RESUELTO en Frente A: el PDF ya no dice "Registro confirmado" antes de pagar; el copy del formulario ya no promete boleto inmediato.
-  RESUELTO en RELANZAMIENTO-NOVIEMBRE-01: fecha del evento actualizada en todo el sitio; categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero (antes compartian la generica de SkiErg).
+  8. Imagen social (og:image, hybrid-experience-social.jpg) sigue con la fecha de octubre horneada en el diseño grafico — requiere regeneracion por el equipo de diseño, no es un fix de codigo.
+  9. Parchear window.fetch NO aisla al SDK de InsForge. Ver "Incidente registrado" en la fase PLANB-CLIP-PAYMENT-01.
+ 10. Tienda deshabilitada: DOMAINS.shop ya no se importa en LandingPage.tsx. Al reactivarla hay que reponer el import, el onClick y quitar el disabled.
+ 11. Las URLs de InsForge en el repo hermano hybrid-event-landing (17 en LandingPage.tsx) siguen hardcodeadas — deuda de OTRO repo, confirmada de nuevo, no resuelta.
+ 12. RELANZAMIENTO-NOVIEMBRE-01 nunca se reverifico contra produccion con diff de hash de bundle (a diferencia de Frente A, que si tuvo esa evidencia).
+  RESUELTO: PDF ya no dice "Registro confirmado" antes de pagar; fecha del evento actualizada en todo el sitio (incluida Ubicacion/DIA_FECHA, via 07b731d); categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero; primer pago real ya tiene flujo de confirmacion + boleto, aunque manual.
 Pending Decisions:
-  1. Frente B (QR/PDF server-side, ticket_sent_at, schedule que dispare boleto al marcar 'paid'): fase futura, sin abrir.
-  2. Links de Clip vencen funcionalmente el 2026-08-31 (fin de lanzamiento): pedir a Paulina los links de preventa antes de esa fecha y actualizar clipLinks.ts.
+  1. Completar Frente B: persistencia de PDF/QR, campo ticket_sent_at, disparo automatico (trigger/schedule) al marcar 'paid' — hoy es 100% manual via CLI.
+  2. Links de Clip vencen funcionalmente el 2026-08-31 (fin de lanzamiento): pedir a Paulina los links de preventa antes de esa fecha.
   3. Cuando abra shop.enforma.mx: reactivar el boton SHOP.
-  4. Si se quiere borrar (no solo apagar) el codigo/tabla de Simulacro Pro, o dejarlo togglable como esta.
-  5. Centralizar las URLs de InsForge de hybrid-event-landing via VITE_MEDIA_BASE_URL (repo hermano, fuera de este workspace).
-  6. Verificar contra el dominio productivo (hash de bundle) que RELANZAMIENTO-NOVIEMBRE-01 quedo exactamente como se probo en local — no se hizo esta fase.
+  4. Si se quiere borrar (no solo apagar) el codigo/tabla de Simulacro Pro, o dejarlo togglable.
+  5. Centralizar las URLs de InsForge de hybrid-event-landing via VITE_MEDIA_BASE_URL (repo hermano).
+  6. Verificar contra el dominio productivo (hash de bundle) que RELANZAMIENTO-NOVIEMBRE-01 quedo igual a lo probado en local.
+  7. Cierre de ventas el 2026-11-07 (regular): sigue siendo manual, cambiar SALES_CONFIG.status a 'closed' ese dia.
+  8. Regenerar la imagen social (og:image) con la fecha de noviembre — trabajo de diseño, no de codigo.
 Protected Sources: (none)
-Next Authorized Phase: (ninguna abierta). Lo siguiente probable es el Frente B de PLANB-CLIP-PAYMENT-01, la actualizacion de links de Clip para preventa antes del 2026-08-31, o verificacion contra produccion del relanzamiento.
-Files To Read First: WORKSPACE_STATUS.md, src/config/pricingStage.ts, src/data/catalogo.ts, src/config/holdingMode.ts, src/config/simulacroProConfig.ts, src/pages/LandingPage.tsx, src/config/clipLinks.ts, src/config/paymentLinks.ts
-Forbidden Actions: push sin autorizacion expresa; modificar los 10 links de Mercado Pago (los genera el usuario a mano); tocar el flujo de confirmacion por WhatsApp; commitear credenciales; exponer la API key de InsForge en frontend; flipear HOLDING_MODE_ACTIVE o SALES_CONFIG.status sin autorizacion; mover imagenes a public/; usar signed URLs para medios publicos
+Next Authorized Phase: (ninguna abierta). Lo siguiente probable es avanzar Frente B, actualizar links de Clip antes del 2026-08-31, o verificar el relanzamiento contra produccion.
+Files To Read First: WORKSPACE_STATUS.md, functions/send-payment-confirmation.ts, functions/send-registration-email.ts, src/config/pricingStage.ts, src/data/catalogo.ts, src/config/holdingMode.ts, src/config/simulacroProConfig.ts, src/pages/LandingPage.tsx, src/config/clipLinks.ts, src/config/paymentLinks.ts
+Forbidden Actions: push sin autorizacion expresa; modificar los 10 links de Mercado Pago (los genera el usuario a mano); tocar el flujo de confirmacion por WhatsApp; commitear credenciales; exponer la API key de InsForge en frontend; flipear HOLDING_MODE_ACTIVE o SALES_CONFIG.status sin autorizacion; mover imagenes a public/; usar signed URLs para medios publicos; invocar send-payment-confirmation sin haber confirmado primero metodo/referencia de pago con el usuario
 Media Constraints: vigentes por herencia — ver "Media Constraints" en la historia heredada
 First Command: git status && git log --oneline -5
 === END_BOOTSTRAP ===
