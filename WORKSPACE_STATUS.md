@@ -420,7 +420,34 @@ No se dio por buena la palabra del dashboard: se descargó el bundle que sirve `
 - **Verificación:** invocación real contra producción (no hay entorno de prueba separado para esta función) — `npx @insforge/cli logs function.logs` confirmó `POST send-payment-confirmation 200 956ms`, sin errores. Correo entregado a `ariadnarivero@hotmail.com` vía Resend (id `096e11da-9a5f-4991-aac6-55d2f2b84801`).
 - **⚠️ Incidente y corrección — boleto incompleto en el primer envío:** el payload del primer envío se armó a mano con `participants: [contactName]` en vez de leer el arreglo real `participants` de la fila (columna que sí existe y sí traía dos nombres: `["Erika Ariadna Rivero Pérez", "Erika Mercedes Briseño Nuñez"]` — el segundo es su pareja de Dobles, capturada por el formulario en `InscribirPage.tsx` vía `teammateNames`, ver campo `participants` en el esquema de `hybrid_registro_inscripciones`). El boleto salió con un solo nombre. Detectado al responder una pregunta del usuario sobre dónde se guardan los nombres de acompañantes en Dobles/Relay. **Corregido en el momento:** se consultó `participants` real y se reinvocó la función con el arreglo completo — segundo correo entregado (Resend id `208d7450-b628-4931-8068-583cb48819c5`). Regla anotada en el runbook de abajo para no repetirlo: el campo `participants` del invoke SIEMPRE debe copiarse del `SELECT` real, nunca asumirse desde `contact_name`.
 - **Commit:** `3c5b435` — `feat(payment): add admin-only payment confirmation email with PDF ticket`. Publicado en `origin/main`.
+- **Pagos confirmados con este mecanismo, misma sesión (3 en total):**
+
+| Pago | Referencia | Categoría | Equipo | Monto | Ref. Mercado Pago | Resend id |
+|---|---|---|---|---|---|---|
+| Erika Ariadna Rivero Pérez + Erika Mercedes Briseño Nuñez | `HEX-B43006D5` | Dobles Mujeres | Kikas | $2,500 MXN | 173447302044 | `208d7450-…` (corregido, ver incidente arriba) |
+| Christopher Seels + Marijose | `HEX-DCAB9E62` | Dobles Mixto | Los Güeros | $2,500 MXN | 173054376847 | `9aca55eb-…` |
+| Ariel Ruiz + Ivan Castillo | `3e91c101-b5de-4864-a55d-b87ba2830eab` | Dobles Hombres | Popotes | $2,500 MXN | 174770911624 | `a4ca6195-…` |
+
+Los tres localizados por HEX o id completo dado por el usuario, confirmados verbalmente (registro correcto + método de pago) antes de marcar `status='paid'`, con `participants` completo verificado contra la base antes de invocar (regla del incidente, ya aplicada desde el segundo pago en adelante).
 - **Next Authorized Phase:** (ninguna abierta). Completar Frente B (persistencia, disparo automático, control de duplicados) sigue como trabajo futuro — ver Pending Decisions.
+
+## Fase SEGURIDAD-TABLAS-HUERFANAS-01 (2026-08-13) — CERRADA
+
+- **Disparador:** el usuario compartió una captura del "Backend Advisor" de InsForge — 5 hallazgos de seguridad, todos severidad alta: 4 tablas (`orders`, `products`, `spectator_tickets`, `pending_registrations`) con RLS completamente desactivado, y `leads` con RLS activado pero una política de INSERT sin ninguna restricción.
+- **Verificación independiente antes de actuar** (el CLI de InsForge no tenía el scan cacheado — "No scan yet" — así que se verificó directo contra la base, no se confió ciegamente en la captura):
+  - `pg_tables.rowsecurity = false` confirmado en las 4 tablas; `leads` con `rowsecurity = true` pero política `"Allow anonymous insert for leads"` con `WITH CHECK (true)`, rol `public`.
+  - `information_schema.role_table_grants`: las 5 tablas tenían SELECT/INSERT/UPDATE/DELETE otorgado a `anon` y `authenticated`.
+  - Conteo de filas reales: `orders` 0, `spectator_tickets` 0, `products` 6, `pending_registrations` **2** (con `contact_email`, `contact_phone`, `participants`, `amount`, `payment_id` — datos personales y de pago reales), `leads` **1** (nombre/correo/mensaje).
+  - `grep` de los 5 nombres de tabla en `hybrid-registro`, `hybrid-event-landing` y `enforma-institutional-web`: cero referencias en código — ninguna app viva las usa. Coincide con el "known issue" ya anotado sobre funciones edge huérfanas de un proyecto anterior (merch-checkout, spectator-checkout, etc.) que compartía este mismo backend InsForge.
+  - Usuario confirmó: esta cuenta de InsForge solo tiene 2 proyectos — `enforma` (este) y `ready2hybrid` (futuro, sin relación) — ningún otro proyecto podía depender de estas tablas.
+- **Decisión de remediación — cerrar acceso, no borrar datos:** para las 4 tablas sin RLS, `ENABLE` + `FORCE ROW LEVEL SECURITY` sin políticas (deny-all por defecto, incluso para el owner). Para `leads`, en vez de aplicar la plantilla genérica de remediación del advisor (que asume una columna `user_id` que esta tabla **no tiene** — es un formulario de contacto anónimo por diseño, columnas `id, name, email, message, source_page, created_at`), se **eliminó directamente** la política permisiva de INSERT; la política de SELECT restringida a `authenticated` se dejó intacta. `leads` también recibió `FORCE ROW LEVEL SECURITY`.
+- **Verificación post-fix, en vivo, con la anon key real** (no solo revisando flags en `pg_catalog`):
+  - `GET /api/database/records/{orders,pending_registrations,leads}` con la anon key → `200 OK`, `[]` en los tres casos (antes habrían devuelto las filas reales).
+  - `POST /api/database/records/leads` con la anon key (intento de INSERT) → `401`, `"new row violates row-level security policy for table \"leads\""`.
+- **Migración:** `migrations/20260813120000_lock-down-orphaned-public-tables.sql`, aplicada con `db migrations up --all` y confirmada con `db migrations list`.
+- **Commit:** `5e00d4e` — `fix(security): lock down 5 orphaned public tables flagged by InsForge advisor`. Publicado en `origin/main`.
+- **Known issues:** (ninguno nuevo — las 7 edge functions huérfanas del mismo proyecto anterior, ya anotadas antes, siguen sin revisar; podrían tener el mismo problema y no se auditaron en esta fase).
+- **Next Authorized Phase:** (ninguna abierta). Pendiente natural: auditar las 7 edge functions huérfanas por el mismo motivo.
 
 ---
 
@@ -433,19 +460,19 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: 3c5b435 (working tree CLEAN, synced with origin/main)
-Last Commits: 3c5b435 feat(payment): add admin-only payment confirmation email with PDF ticket | 07b731d fix(landing): correct stale Oct event dates to Nov 13-15 and document sales calendar [usuario + otra sesion, no de esta] | 08146fd docs(workspace): close RELANZAMIENTO-NOVIEMBRE-01
-Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida y en uso)
+HEAD: 5e00d4e (working tree CLEAN, synced with origin/main)
+Last Commits: 5e00d4e fix(security): lock down 5 orphaned public tables flagged by InsForge advisor | 3c5b435 feat(payment): add admin-only payment confirmation email with PDF ticket | 07b731d fix(landing): correct stale Oct event dates to Nov 13-15 and document sales calendar [usuario + otra sesion, no de esta]
+Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida, 3 pagos reales procesados) | SEGURIDAD-TABLAS-HUERFANAS-01 (DESPLEGADO)
 Open Phase: (none). Frente B completo (persistencia, disparo automatico, control de duplicados) sigue sin construir — solo existe su primera pieza (envio manual con PDF).
 Gate: PHASE_COMPLETE
-Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026. Calendario comercial (pricingStage.ts, ampliado en 07b731d): lanzamiento 11-31 ago, preventa 1-30 sep, regular 1 oct - 7 nov (cierre manual via status='closed', sin automatismo por fecha). Simulacro Pro: INACTIVO. Categoria PRO: eliminada de la UI publica. Tienda: DESHABILITADA ("SHOP · PRONTO"). Primer pago real confirmado y con boleto enviado: Erika Rivero, HEX-B43006D5, Dobles Mujeres, $2,500 MXN via Mercado Pago (ref 173447302044).
-DEPLOY STATE: origin/main = 3c5b435. RELANZAMIENTO-NOVIEMBRE-01 no se reverifico contra el dominio productivo con diff de hash (pendiente). La funcion send-payment-confirmation SI se verifico contra produccion real (es la unica forma de probarla) — log confirmado 200 OK, correo entregado via Resend.
+Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026. Calendario comercial (pricingStage.ts, ampliado en 07b731d): lanzamiento 11-31 ago, preventa 1-30 sep, regular 1 oct - 7 nov (cierre manual via status='closed', sin automatismo por fecha). Simulacro Pro: INACTIVO. Categoria PRO: eliminada de la UI publica. Tienda: DESHABILITADA ("SHOP · PRONTO"). 3 pagos reales confirmados y con boleto enviado: Erika Rivero (HEX-B43006D5, Dobles Mujeres, Kikas), Christopher Seels/Marijose (HEX-DCAB9E62, Dobles Mixto, Los Güeros), Ariel Ruiz/Ivan Castillo (id 3e91c101-…, Dobles Hombres, Popotes) — $2,500 MXN c/u via Mercado Pago. Seguridad: 5 tablas huerfanas de un proyecto anterior (orders, products, spectator_tickets, pending_registrations, leads) cerradas via RLS forzado — verificado con la anon key real, ya no leen ni escriben.
+DEPLOY STATE: origin/main = 5e00d4e. RELANZAMIENTO-NOVIEMBRE-01 no se reverifico contra el dominio productivo con diff de hash (pendiente). send-payment-confirmation verificada 3 veces contra produccion real (unica forma de probarla) — siempre 200 OK, correo entregado via Resend. La migracion de seguridad se verifico en vivo con peticiones reales usando la anon key (no solo revisando pg_catalog).
 Publish order (para futuros cambios que toquen correo):
   1. npx @insforge/cli functions deploy <slug> --file functions/<slug>.ts   (send-registration-email o send-payment-confirmation, segun cual se edite)
   2. git push   (dispara deploy de Vercel, solo aplica a cambios de frontend)
   Publicar el frontend sin desplegar la funcion no rompe nada, pero deja el correo con el codigo/texto viejo. No invertir el orden.
 How to confirm a payment right now (hasta que exista Frente B completo):
-  1. Ubicar el registro: npx @insforge/cli db query "SELECT * FROM hybrid_registro_inscripciones WHERE id::text ILIKE '<primeros 8 chars del HEX>%'" --json
+  1. Ubicar el registro: npx @insforge/cli db query "SELECT * FROM hybrid_registro_inscripciones WHERE id::text ILIKE '<primeros 8 chars del HEX>%'" --json   (si el usuario da el UUID completo en vez de un HEX, usar WHERE id = '<uuid>' directo)
   2. Confirmar con el usuario: metodo de pago + referencia (o dejar notes sin ID si no la tiene).
   3. UPDATE ... SET status='paid', mp_payment_id='<ref>', notes='...' WHERE id='<uuid completo>'
   4. npx @insforge/cli functions invoke send-payment-confirmation --data '{"to":"...","contactName":"...","categoryName":"...","teamName":"...","amountLabel":"$X,XXX MXN","participants":["..."],"registrationId":"<uuid>","eventDateLabel":"13, 14 y 15 de noviembre de 2026","cardImageUrl":"<URL IMG_* de la categoria en LandingPage.tsx>"}'   (JSON en una sola linea, el CLI no tolera saltos de linea en --data)
@@ -456,14 +483,14 @@ Known Issues:
   3. Sin campo de control de envio de boleto (riesgo de reenvios duplicados si se invoca dos veces para el mismo registro).
   4. Correo fire-and-forget en ambas funciones: no se verifica ni registra la entrega mas alla del log de invocacion.
   5. Codigo huerfano heredado del clon, sin importadores: src/api/checkout.ts, src/lib/submitLock.ts, src/api/orderStatus.ts, src/config/checkoutConfig.ts, src/lib/checkoutSession.ts, src/pages/CheckoutConfirmPage.tsx (ruta /checkout/confirmando).
-  6. 7 edge functions huerfanas activas en InsForge del proyecto anterior (merch-checkout, spectator-checkout, stripe-webhook, mp-webhook, ghl-notify, registration-status, create-checkout) — sin versionar en este repo.
+  6. 7 edge functions huerfanas activas en InsForge del proyecto anterior (merch-checkout, spectator-checkout, stripe-webhook, mp-webhook, ghl-notify, registration-status, create-checkout) — sin versionar en este repo. Dado que 5 tablas del mismo proyecto anterior tenian RLS mal configurado (ver SEGURIDAD-TABLAS-HUERFANAS-01), estas funciones podrian tener problemas equivalentes (autenticacion, exposicion de datos) — NO auditadas todavia.
   7. Registros previos al reordenamiento de itinerario conservan el dia anterior (ej. Dobles Hombres: viernes -> sabado). Requiere aviso manual al confirmar pago.
   8. Imagen social (og:image, hybrid-experience-social.jpg) sigue con la fecha de octubre horneada en el diseño grafico — requiere regeneracion por el equipo de diseño, no es un fix de codigo.
   9. Parchear window.fetch NO aisla al SDK de InsForge. Ver "Incidente registrado" en la fase PLANB-CLIP-PAYMENT-01.
  10. Tienda deshabilitada: DOMAINS.shop ya no se importa en LandingPage.tsx. Al reactivarla hay que reponer el import, el onClick y quitar el disabled.
  11. Las URLs de InsForge en el repo hermano hybrid-event-landing (17 en LandingPage.tsx) siguen hardcodeadas — deuda de OTRO repo, confirmada de nuevo, no resuelta.
  12. RELANZAMIENTO-NOVIEMBRE-01 nunca se reverifico contra produccion con diff de hash de bundle (a diferencia de Frente A, que si tuvo esa evidencia).
-  RESUELTO: PDF ya no dice "Registro confirmado" antes de pagar; fecha del evento actualizada en todo el sitio (incluida Ubicacion/DIA_FECHA, via 07b731d); categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero; primer pago real ya tiene flujo de confirmacion + boleto, aunque manual.
+  RESUELTO: PDF ya no dice "Registro confirmado" antes de pagar; fecha del evento actualizada en todo el sitio (incluida Ubicacion/DIA_FECHA, via 07b731d); categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero; 3 pagos reales ya con flujo de confirmacion + boleto (manual); 5 tablas huerfanas (orders, products, spectator_tickets, pending_registrations, leads) cerradas y verificadas con la anon key real, ya no exponen datos a anonimos.
 Pending Decisions:
   1. Completar Frente B: persistencia de PDF/QR, campo ticket_sent_at, disparo automatico (trigger/schedule) al marcar 'paid' — hoy es 100% manual via CLI.
   2. Links de Clip vencen funcionalmente el 2026-08-31 (fin de lanzamiento): pedir a Paulina los links de preventa antes de esa fecha.
@@ -473,6 +500,7 @@ Pending Decisions:
   6. Verificar contra el dominio productivo (hash de bundle) que RELANZAMIENTO-NOVIEMBRE-01 quedo igual a lo probado en local.
   7. Cierre de ventas el 2026-11-07 (regular): sigue siendo manual, cambiar SALES_CONFIG.status a 'closed' ese dia.
   8. Regenerar la imagen social (og:image) con la fecha de noviembre — trabajo de diseño, no de codigo.
+  9. Auditar las 7 edge functions huerfanas del proyecto anterior por el mismo tipo de problema que se encontro en las 5 tablas (autenticacion/exposicion) — no se hizo en SEGURIDAD-TABLAS-HUERFANAS-01, solo se cerraron las tablas.
 Protected Sources: (none)
 Next Authorized Phase: (ninguna abierta). Lo siguiente probable es avanzar Frente B, actualizar links de Clip antes del 2026-08-31, o verificar el relanzamiento contra produccion.
 Files To Read First: WORKSPACE_STATUS.md, functions/send-payment-confirmation.ts, functions/send-registration-email.ts, src/config/pricingStage.ts, src/data/catalogo.ts, src/config/holdingMode.ts, src/config/simulacroProConfig.ts, src/pages/LandingPage.tsx, src/config/clipLinks.ts, src/config/paymentLinks.ts
