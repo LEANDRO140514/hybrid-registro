@@ -14,6 +14,7 @@ import { sendRegistrationEmail } from '../api/registrationEmail'
 import { getPaymentLinkForProducto } from '../config/paymentLinks'
 import { getClipLinkForProducto } from '../config/clipLinks'
 import { getSupportWhatsAppUrl } from '../config/supportConfig'
+import { trackLead } from '../lib/metaPixel'
 
 type ViewState =
   | { kind: 'form' }
@@ -127,6 +128,8 @@ export default function InscribirPage() {
       setView({ kind: 'error', message: result.error ?? 'No pudimos guardar tu registro. Inténtalo de nuevo.' })
       return
     }
+
+    trackLead({ content_name: producto.nombre, content_category: producto.bloque, value: precioActual, currency: 'MXN' })
 
     const qrUrl = await generateQrTicket({ registrationId, producto, participants, precio: precioActual })
     const amountLabel = `${formatPrecio(precioActual)} · ${producto.precioUnidad}`
