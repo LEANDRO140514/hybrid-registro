@@ -521,7 +521,7 @@ Los ocho localizados por HEX o id completo dado por el usuario, confirmados verb
   - Hero sub: "El evento fitness más intenso de México" → "El deporte híbrido del que todos hablan. Fuerza y resistencia, ahora con tu comunidad."
   - Línea de fecha del hero: "13-15 NOVIEMBRE 2026 • MÉRIDA YUCATÁN" → "13-15 NOVIEMBRE 2026" (se quitó la ciudad de la promesa; extensión mínima del paquete aprobado, alineada con "no geografía en el hero" — flagged al usuario).
   - `OrganizerStrip`: "Organizado por ENFORMA Sports Society · Mérida, Yucatán · 13, 14 y 15…" → sin "Mérida, Yucatán".
-  - Bloque nuevo después del hero (antes de "Elige tu experiencia"): "no se explica con una ciudad… Aquí no llegas a ver un evento. Llegas a reconocerte… La comunidad es el formato."
+  - Bloque nuevo después del hero (antes de "Elige tu experiencia"): "HYBRID EXPERIENCE se explica con quienes ya viven este deporte… Aquí no llegas a ver un evento. Llegas a reconocerte… La comunidad es el formato." (la frase "no se explica con una ciudad" se quitó por redundante en `5a214e1`, poco después del deploy inicial.)
   - Sección "¿Qué es el deporte híbrido?": los 3 párrafos reescritos para abrir con secuencia + sensación (pulmones, piernas cansadas) en vez de definición seca. Se perdió la frase "se mide en tiempo total / el que termina primero gana" — el cronometraje sigue cubierto en el FAQ y en la sección del reto.
 - **NO tocado:** `index.html` (metadata, JSON-LD), `llms.txt`, `robots.txt`, sección "Sede y fechas" (Club Cumbres, MÉRIDA YUCATÁN — es logística, la gente tiene que saber a dónde llegar), `HoldingPage.tsx` (inactiva, aún dice "Club Cumbres, Mérida").
 - **Verificación:** `tsc -b` / `oxlint` / `vite build` limpios. En dev server: los 4 bloques renderizan con el texto nuevo, el hero ya no dice "México" ni "MÉRIDA YUCATÁN", la tabla de estaciones y la sección de sede siguen intactas, 0 errores de consola, screenshot del hero confirmado.
@@ -540,8 +540,8 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: 2cdcb89 (working tree CLEAN, synced with origin/main, salvo el propio commit de cierre de esta acta — ver nota al inicio del archivo)
-Last Commits: 2cdcb89 fix(pwa): stop the service worker from serving the SPA for direct asset URLs | 24fdbc7 fix(og): update social card — correct date to 13-15 Nov, remove third-party logo | 9d2de19 feat(copy): fase 2 — reposicionamiento de marca (comunidad, sin geografía en la promesa)
+HEAD: 5a214e1 (working tree CLEAN, synced with origin/main, salvo el propio commit de cierre de esta acta — ver nota al inicio del archivo)
+Last Commits: 5a214e1 copy: drop "no se explica con una ciudad" from the post-hero block | 2cdcb89 fix(pwa): stop the service worker from serving the SPA for direct asset URLs | 24fdbc7 fix(og): update social card — correct date to 13-15 Nov, remove third-party logo
 Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida, 8 pagos reales procesados) | SEGURIDAD-TABLAS-HUERFANAS-01 (DESPLEGADO) | META-PIXEL-01 (DESPLEGADO) | CLIP-RELINK-CONGELA-PRECIOS-01 (DESPLEGADO) | SEO-GEO-FASE-1-01 (DESPLEGADO) | COPY-MARCA-FASE-2-01 (DESPLEGADO)
 Open Phase: (none). Frente B completo (persistencia, disparo automatico, control de duplicados) sigue sin construir — solo existe su primera pieza (envio manual con PDF).
 Gate: PHASE_COMPLETE
