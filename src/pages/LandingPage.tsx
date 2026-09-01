@@ -34,37 +34,14 @@ import type { Producto, EtapaComercial } from '../data/catalogo'
 import { resolveEtapaComercial } from '../config/pricingStage'
 // `DOMAINS` salió de aquí al deshabilitar el botón SHOP: era su único uso en
 // este archivo. Reimportarlo al reactivar la tienda (ver navbar).
-import { eventConfig } from '../config/eventConfig'
 import { SALES_CONFIG } from '../config/salesConfig'
 import { SIMULACRO_PRO_ACTIVE } from '../config/simulacroProConfig'
 import { submitSimulacroPro } from '../api/simulacroPro'
 import type { IndividualProModalidad, DoblesProModalidad } from '../api/simulacroPro'
 
-const EVENT_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'Event',
-  name: eventConfig.name,
-  description:
-    'Vive HYBRID EXPERIENCE del 13 al 15 de noviembre de 2026 en Mérida. Compite en Individual, Dobles o Relay, empieza con ½ Hybrid y Workout Experience, o compra tu acceso como público.',
-  url: 'https://hybrid-registro.enforma.mx/',
-  startDate: '2026-11-13T17:00:00-06:00',
-  endDate: '2026-11-15',
-  eventStatus: 'https://schema.org/EventScheduled',
-  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-  location: {
-    '@type': 'Place',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Mérida',
-      addressRegion: 'Yucatán',
-      addressCountry: 'MX',
-    },
-  },
-  organizer: {
-    '@type': 'Organization',
-    name: 'ENFORMA Sports Society',
-  },
-} as const
+// El JSON-LD del evento ahora se sirve estático en index.html (<head>) para que
+// lo lean los crawlers y motores de IA que no ejecutan JS. Antes se inyectaba
+// desde aquí en un useEffect.
 
 const DIA_COMPITO_ROWS = [
   { formato: 'Dobles', cuando: 'Viernes Vespertino (Mujeres) · Sábado Día completo (Hombres y Mixto)' },
@@ -1340,16 +1317,6 @@ export default function LandingPage() {
   const targetDate = useMemo(() => new Date('2026-11-13T17:00:00'), [])
   const timeLeft = useCountdown(targetDate)
   const [showBackToTop, setShowBackToTop] = useState(false)
-
-  useEffect(() => {
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.text = JSON.stringify(EVENT_JSON_LD)
-    document.head.appendChild(script)
-    return () => {
-      document.head.removeChild(script)
-    }
-  }, [])
 
   useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 800)

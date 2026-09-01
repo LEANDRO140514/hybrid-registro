@@ -1,4 +1,34 @@
+# Buscadores tradicionales
 User-agent: *
+Allow: /
+
+# Motores de respuesta / crawlers de IA — permitidos explícitamente
+# para que el evento pueda ser citado en ChatGPT, Claude, Perplexity y Gemini.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://hybrid-registro.enforma.mx/sitemap.xml
