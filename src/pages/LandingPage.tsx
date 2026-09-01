@@ -1196,7 +1196,7 @@ function OrganizerStrip() {
           textTransform: 'uppercase',
         }}
       >
-        Organizado por ENFORMA Sports Society · Mérida, Yucatán · 13, 14 y 15 de noviembre de 2026
+        Organizado por ENFORMA Sports Society · 13, 14 y 15 de noviembre de 2026
       </Typography>
     </Box>
   )
@@ -1408,7 +1408,7 @@ export default function LandingPage() {
             fontSize: { xs: '1rem', sm: '1.2rem' },
           }}
         >
-          El evento fitness más intenso de México
+          El deporte híbrido del que todos hablan. Fuerza y resistencia, ahora con tu comunidad.
         </Typography>
         <Typography
           variant="caption"
@@ -1478,8 +1478,51 @@ export default function LandingPage() {
           variant="body2"
           sx={{ color: 'text.secondary', letterSpacing: '0.15em', textTransform: 'uppercase' }}
         >
-          13-15 NOVIEMBRE 2026 • MÉRIDA YUCATÁN
+          13-15 NOVIEMBRE 2026
         </Typography>
+      </Box>
+
+      {/* ===== POR QUÉ ESTÁS AQUÍ (lead-in de comunidad, después del hero) ===== */}
+      <Box component="section" sx={{ py: { xs: 6, md: 8 }, bgcolor: 'background.default', px: 2 }}>
+        <Stack spacing={2.5} sx={{ maxWidth: 640, mx: 'auto', textAlign: 'center' }}>
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'text.secondary',
+              fontSize: { xs: '1rem', sm: '1.15rem' },
+              lineHeight: 1.7,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            HYBRID EXPERIENCE no se explica con una ciudad. Se explica con quienes ya viven
+            este deporte: salen a correr, vuelven a la estación, se tiran al suelo y se
+            levantan otra vez.
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#E6F2B1',
+              fontWeight: 700,
+              fontSize: { xs: '1.05rem', sm: '1.25rem' },
+              lineHeight: 1.6,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Aquí no llegas a ver un evento. Llegas a reconocerte.
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'text.secondary',
+              fontSize: { xs: '1rem', sm: '1.15rem' },
+              lineHeight: 1.7,
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Individual, Dobles o Relay. O te asomas con Workout Experience y ½ Hybrid. La
+            comunidad es el formato.
+          </Typography>
+        </Stack>
       </Box>
 
       <EligeTuExperiencia />
@@ -1505,8 +1548,7 @@ export default function LandingPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              Una competencia continua: corres, entras a una estación de trabajo funcional,
-              y vuelves a correr. Sin pausas entre segmentos.
+              Corres. Empujas. Cargas. Vuelves a correr. Sin pausa entre una cosa y la otra.
             </Typography>
             <Typography
               variant="body1"
@@ -1518,8 +1560,8 @@ export default function LandingPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              Se mide en tiempo total. El que termina primero — corriendo y trabajando —
-              gana.
+              Es el mismo cuerpo en dos idiomas: los pulmones al límite en la carrera, la
+              fuerza en cada estación. Y otra vez a correr, con las piernas ya cansadas.
             </Typography>
             <Typography
               variant="body1"
@@ -1532,7 +1574,7 @@ export default function LandingPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              Esto es deporte híbrido: resistencia y fuerza puestas a prueba en el mismo reloj. El reto completo.
+              Eso es el deporte híbrido. El evento solo lo pone en el mismo piso, el mismo día, con la gente que ya entrena así.
             </Typography>
           </Stack>
 
