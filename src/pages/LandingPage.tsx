@@ -269,12 +269,14 @@ function ArrowUp({ size = 20, color = '#E6F2B1' }: { size?: number; color?: stri
 }
 
 // Hero background — responsive by breakpoint (largest available original is w1248).
+// Resubidas 2026-09-01 sin el banner de Red Bull del fondo (borrado generativo);
+// el ?v= es el md5 del webp nuevo y rompe el caché del CDN.
 const IMG_HERO_400 =
-  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/hero%2Fhero-corredores-multitud-w400.webp?v=88169c62c615ba9bb61116af9eed197e'
+  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/hero%2Fhero-corredores-multitud-w400.webp?v=f5b625818c65562536284c8e03312761'
 const IMG_HERO_800 =
-  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/hero%2Fhero-corredores-multitud-w800.webp?v=c83fbdbae44ef58109a443c458ebfeda'
+  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/hero%2Fhero-corredores-multitud-w800.webp?v=f6ad835f154f3c4a77dea845e78026e7'
 const IMG_HERO_1248 =
-  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/hero%2Fhero-corredores-multitud-w1248.webp?v=816d22dd74b6710c6f5a59c662c0b133'
+  'https://3e9sriq7.us-east.insforge.app/api/storage/buckets/images/objects/hero%2Fhero-corredores-multitud-w1248.webp?v=e88b789917f156177cd11f51e4e94b90'
 
 // Ubicación (Club Cumbres) background — responsive by breakpoint.
 const IMG_VENUE_400 =
