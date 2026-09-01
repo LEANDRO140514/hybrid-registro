@@ -18,16 +18,16 @@ import { resolveEtapaComercial } from './pricingStage'
 export const CLIP_LINKS_ETAPA: EtapaComercial = 'lanzamiento'
 
 export const CLIP_LINKS_BY_GROUP: Record<PaymentGroupKey, string | null> = {
-  DOBLES: 'https://pago.clip.mx/v3/96483c99-987a-4cd5-bc1c-d381932a828d',
-  RELAY: 'https://pago.clip.mx/v3/55546ca9-27c7-47a9-8afa-827d4925080e',
-  HALF_DOBLES: 'https://pago.clip.mx/v3/36e10dc0-6cfa-4bc9-b37c-f741f86681af',
-  INDIVIDUAL: 'https://pago.clip.mx/v3/31ab0c0c-6491-449c-9e3f-d5cf03365050',
-  HALF_INDIVIDUAL: 'https://pago.clip.mx/v3/8d3f578a-f221-4dc1-bd77-2405bd548df6',
-  WORKOUT: 'https://pago.clip.mx/v3/b4437682-d5e2-4613-98f5-30ed10301f65',
-  PUB_1D: 'https://pago.clip.mx/v3/cc0fbd16-0452-4946-854e-3efbd03f97f2',
-  PUB_3D: 'https://pago.clip.mx/v3/ac8ee7d8-5738-470a-b667-93852103c874',
-  FOT_1D: 'https://pago.clip.mx/v3/52c6bfc0-f77c-4e4b-816b-fe068ededed1',
-  FOT_3D: 'https://pago.clip.mx/v3/2672c15c-16f9-4098-9c3d-66ea0323b9f9',
+  DOBLES: 'https://pago.clip.mx/v3/05426bf8-efa0-456f-9cfa-598f9f43c9e4',
+  RELAY: 'https://pago.clip.mx/v3/5f3f6d27-a9fc-465f-a179-2e23e5fa300c',
+  HALF_DOBLES: 'https://pago.clip.mx/v3/c05c7c03-bb27-42ba-b739-295b9a8e460d',
+  INDIVIDUAL: 'https://pago.clip.mx/v3/6491e5ae-504c-4e9d-b244-40aa2630bd30',
+  HALF_INDIVIDUAL: 'https://pago.clip.mx/v3/c61eb8e7-dc37-4292-92d8-28c4c0607a3c',
+  WORKOUT: 'https://pago.clip.mx/v3/9e3a6598-4a8c-49c2-86b6-9426aaf01aff',
+  PUB_1D: 'https://pago.clip.mx/v3/5c6ca209-a1b8-4be5-87a4-dd8087e84b04',
+  PUB_3D: 'https://pago.clip.mx/v3/51f529fe-51c3-44e8-8580-07946b989d94',
+  FOT_1D: 'https://pago.clip.mx/v3/75b091ca-1b58-4417-b372-6531d025650a',
+  FOT_3D: 'https://pago.clip.mx/v3/6bf79e04-3e27-4abf-83c3-a51dd8881ba6',
 }
 
 // `etapa` es inyectable para que quien ya la resolvió (la pantalla de

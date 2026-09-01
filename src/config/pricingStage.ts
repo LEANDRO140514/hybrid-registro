@@ -15,7 +15,17 @@ export const FECHA_CIERRE_VENTAS = '2026-11-07'
 // Encender manualmente cuando el equipo de ventas autorice el arranque de la etapa.
 export const ventasArrancadas = false
 
+// CONGELAMIENTO MANUAL DE PRECIOS (2026-09-01, autorizado por el Project Owner).
+// Mientras esto no sea null, resolveEtapaComercial() ignora el calendario y
+// devuelve siempre esta etapa. Decisión de negocio: los precios se mantienen
+// en 'lanzamiento' hasta nuevo aviso (no se avanza a 'preventa' por fecha).
+// Los links de pago vigentes (Clip y Mercado Pago) corresponden a este monto.
+// Para reanudar el cálculo por fecha: poner ETAPA_CONGELADA = null.
+export const ETAPA_CONGELADA: EtapaComercial | null = 'lanzamiento'
+
 export function resolveEtapaComercial(): EtapaComercial {
+  if (ETAPA_CONGELADA) return ETAPA_CONGELADA
+
   const ahoraMerida = new Date(
     new Date().toLocaleString('en-US', { timeZone: 'America/Merida' }),
   )
