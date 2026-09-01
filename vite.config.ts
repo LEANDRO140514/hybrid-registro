@@ -36,6 +36,20 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         cleanupOutdatedCaches: true,
+        // El NavigationRoute de workbox responde con index.html a CUALQUIER
+        // navegación que no esté en el precache. Sin denylist, abrir en el
+        // navegador la URL directa de un asset (p. ej. /og/*.jpg, /robots.txt)
+        // devolvía la SPA → su página 404. Los crawlers/bots no pasan por el
+        // service worker, así que esto solo afecta a un humano abriendo la URL
+        // directa; aun así, que caiga en el archivo real.
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [
+          /^\/og\//,
+          /^\/icons\//,
+          /^\/fonts\//,
+          // cualquier ruta cuyo último segmento tenga extensión de archivo
+          /\/[^/?]+\.[^/?]+$/,
+        ],
       },
     }),
   ],
