@@ -1494,9 +1494,8 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            HYBRID EXPERIENCE no se explica con una ciudad. Se explica con quienes ya viven
-            este deporte: salen a correr, vuelven a la estación, se tiran al suelo y se
-            levantan otra vez.
+            HYBRID EXPERIENCE se explica con quienes ya viven este deporte: salen a correr,
+            vuelven a la estación, se tiran al suelo y se levantan otra vez.
           </Typography>
           <Typography
             variant="body1"
