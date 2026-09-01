@@ -465,6 +465,32 @@ Los ocho localizados por HEX o id completo dado por el usuario, confirmados verb
 - **Known issues:** (ninguno nuevo — las 7 edge functions huérfanas del mismo proyecto anterior, ya anotadas antes, siguen sin revisar; podrían tener el mismo problema y no se auditaron en esta fase).
 - **Next Authorized Phase:** (ninguna abierta). Pendiente natural: auditar las 7 edge functions huérfanas por el mismo motivo.
 
+## Fase CLIP-RELINK-CONGELA-PRECIOS-01 (2026-09-01) — CERRADA
+
+- **Disparador:** el usuario preguntó si había habido cambio de precios hoy. Hallazgo: hoy 1 sep `resolveEtapaComercial()` avanzaba solo de `lanzamiento` a `preventa` por calendario (`FECHA_FIN_LANZAMIENTO = '2026-08-31'`), lo que (a) subía ~10 % los precios mostrados y cobrados, (b) dejaba los 5 links de Clip de categorías con etapas devolviendo `null` por el guard `CLIP_LINKS_ETAPA`, y (c) desalineaba web vs pago: la landing mostraría preventa pero los links de Mercado Pago siguen con monto de lanzamiento.
+- **Decisión de negocio (usuario):** NO hay cambio de precios. Se mantienen en `lanzamiento` hasta nuevo aviso. Mercado Pago no se toca. Los 10 links de Clip se regeneran porque vencen funcionalmente.
+- **Congelación de etapa:** nuevo `ETAPA_CONGELADA: EtapaComercial | null = 'lanzamiento'` en `src/config/pricingStage.ts`; `resolveEtapaComercial()` hace `if (ETAPA_CONGELADA) return ETAPA_CONGELADA` antes del cálculo por fecha. El calendario (`FECHA_FIN_LANZAMIENTO`, `FECHA_FIN_PREVENTA`, `FECHA_CIERRE_VENTAS`) queda intacto. Para reanudar el cálculo por fecha: `ETAPA_CONGELADA = null`.
+- **Links de Clip:** los 10 de `CLIP_LINKS_BY_GROUP` reemplazados 1:1 (mismos montos, `CLIP_LINKS_ETAPA` sigue en `'lanzamiento'`), pasados por el usuario uno por uno desde el panel de Clip:
+
+| Grupo | UUID nuevo | Monto |
+|---|---|---|
+| DOBLES | `05426bf8-efa0-456f-9cfa-598f9f43c9e4` | $2,500 |
+| RELAY | `5f3f6d27-a9fc-465f-a179-2e23e5fa300c` | $3,200 |
+| HALF_DOBLES | `c05c7c03-bb27-42ba-b739-295b9a8e460d` | $1,600 |
+| INDIVIDUAL | `6491e5ae-504c-4e9d-b244-40aa2630bd30` | $1,500 |
+| HALF_INDIVIDUAL | `c61eb8e7-dc37-4292-92d8-28c4c0607a3c` | $800 |
+| WORKOUT | `9e3a6598-4a8c-49c2-86b6-9426aaf01aff` | $350 |
+| PUB_1D | `5c6ca209-a1b8-4be5-87a4-dd8087e84b04` | $250 |
+| PUB_3D | `51f529fe-51c3-44e8-8580-07946b989d94` | $600 |
+| FOT_1D | `75b091ca-1b58-4417-b372-6531d025650a` | $350 |
+| FOT_3D | `6bf79e04-3e27-4abf-83c3-a51dd8881ba6` | $800 |
+
+- **Verificación:** `tsc -b` / `oxlint` / `vite build` limpios. En dev server, evaluación en vivo sobre los 23 productos del catálogo: `resolveEtapaComercial()` → `'lanzamiento'`, 0 links de Clip resolviendo a `null`, cada grupo mapea a su UUID nuevo, montos sin cambio, links de Mercado Pago intactos. Pantalla `/inscribir?cat=DOB-VIE-MM` renderiza `$2,500 MXN` (no $2,750).
+- **Commit:** `f011261` — `fix(payments): regenerate all 10 Clip links + freeze commercial stage at 'lanzamiento'`. Publicado en `origin/main` (push autorizado por el usuario en la sesión).
+- **NO tocado:** `src/config/paymentLinks.ts` (Mercado Pago), precios en `src/data/catalogo.ts`, `src/config/salesConfig.ts`.
+- **Known issues:** (ninguno nuevo).
+- **Next Authorized Phase:** (ninguna abierta).
+
 ---
 
 ```
@@ -476,13 +502,13 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: 7869c93 (working tree CLEAN, synced with origin/main, salvo el propio commit de cierre de esta acta — ver nota al inicio del archivo)
-Last Commits: 7869c93 feat(analytics): add Meta Pixel (Enforma Sports Society) + Lead event | 5e00d4e fix(security): lock down 5 orphaned public tables flagged by InsForge advisor | 3c5b435 feat(payment): add admin-only payment confirmation email with PDF ticket
-Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida, 8 pagos reales procesados) | SEGURIDAD-TABLAS-HUERFANAS-01 (DESPLEGADO) | META-PIXEL-01 (DESPLEGADO)
+HEAD: f011261 (working tree CLEAN, synced with origin/main, salvo el propio commit de cierre de esta acta — ver nota al inicio del archivo)
+Last Commits: f011261 fix(payments): regenerate all 10 Clip links + freeze commercial stage at 'lanzamiento' | 7869c93 feat(analytics): add Meta Pixel (Enforma Sports Society) + Lead event | 5e00d4e fix(security): lock down 5 orphaned public tables flagged by InsForge advisor
+Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida, 8 pagos reales procesados) | SEGURIDAD-TABLAS-HUERFANAS-01 (DESPLEGADO) | META-PIXEL-01 (DESPLEGADO) | CLIP-RELINK-CONGELA-PRECIOS-01 (DESPLEGADO)
 Open Phase: (none). Frente B completo (persistencia, disparo automatico, control de duplicados) sigue sin construir — solo existe su primera pieza (envio manual con PDF).
 Gate: PHASE_COMPLETE
-Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026. Calendario comercial (pricingStage.ts, ampliado en 07b731d): lanzamiento 11-31 ago, preventa 1-30 sep, regular 1 oct - 7 nov (cierre manual via status='closed', sin automatismo por fecha). Simulacro Pro: INACTIVO. Categoria PRO: eliminada de la UI publica. Tienda: DESHABILITADA ("SHOP · PRONTO"). 8 pagos reales confirmados y con boleto enviado via Mercado Pago — ver tabla completa en FRENTE-B-LITE-01. Seguridad: 5 tablas huerfanas de un proyecto anterior cerradas via RLS forzado, verificado con la anon key real. Meta Pixel (dataset 1274781161363578) instalado con PageView + evento Lead en /inscribir; sin evento Purchase (pago se confirma fuera del navegador).
-DEPLOY STATE: origin/main al dia de este cierre de acta, HEAD 7869c93 (ver nota al inicio del archivo sobre por que el acta nunca contiene su propio hash). RELANZAMIENTO-NOVIEMBRE-01 no se reverifico contra el dominio productivo con diff de hash (pendiente). send-payment-confirmation verificada 8 veces contra produccion real (unica forma de probarla) — siempre 200 OK, correo entregado via Resend. La migracion de seguridad se verifico en vivo con peticiones reales usando la anon key. El Meta Pixel se verifico con un espia sobre window.fbq durante un envio real de formulario (fila de prueba borrada despues).
+Commercial State: SALES OPEN (SALES_CONFIG.status='open', HOLDING_MODE_ACTIVE=false). Evento: 13-14-15 de noviembre de 2026. Calendario comercial (pricingStage.ts, ampliado en 07b731d): lanzamiento 11-31 ago, preventa 1-30 sep, regular 1 oct - 7 nov (cierre manual via status='closed', sin automatismo por fecha). ⚠️ PRECIOS CONGELADOS desde 2026-09-01 (CLIP-RELINK-CONGELA-PRECIOS-01): ETAPA_CONGELADA='lanzamiento' en pricingStage.ts ignora ese calendario y fuerza etapa 'lanzamiento' hasta nuevo aviso. Para reanudar el calculo por fecha: ETAPA_CONGELADA=null. Los 10 links de Clip se regeneraron el mismo dia (mismos montos). Simulacro Pro: INACTIVO. Categoria PRO: eliminada de la UI publica. Tienda: DESHABILITADA ("SHOP · PRONTO"). 8 pagos reales confirmados y con boleto enviado via Mercado Pago — ver tabla completa en FRENTE-B-LITE-01. Seguridad: 5 tablas huerfanas de un proyecto anterior cerradas via RLS forzado, verificado con la anon key real. Meta Pixel (dataset 1274781161363578) instalado con PageView + evento Lead en /inscribir; sin evento Purchase (pago se confirma fuera del navegador).
+DEPLOY STATE: origin/main al dia de este cierre de acta, HEAD f011261 (ver nota al inicio del archivo sobre por que el acta nunca contiene su propio hash). CLIP-RELINK-CONGELA-PRECIOS-01 verificado en dev server con evaluacion en vivo sobre los 23 productos (0 links de Clip en null, etapa 'lanzamiento', montos sin cambio); no reverificado contra el dominio productivo con diff de hash. RELANZAMIENTO-NOVIEMBRE-01 no se reverifico contra el dominio productivo con diff de hash (pendiente). send-payment-confirmation verificada 8 veces contra produccion real (unica forma de probarla) — siempre 200 OK, correo entregado via Resend. La migracion de seguridad se verifico en vivo con peticiones reales usando la anon key. El Meta Pixel se verifico con un espia sobre window.fbq durante un envio real de formulario (fila de prueba borrada despues).
 Publish order (para futuros cambios que toquen correo):
   1. npx @insforge/cli functions deploy <slug> --file functions/<slug>.ts   (send-registration-email o send-payment-confirmation, segun cual se edite)
   2. git push   (dispara deploy de Vercel, solo aplica a cambios de frontend)
@@ -506,10 +532,10 @@ Known Issues:
  10. Tienda deshabilitada: DOMAINS.shop ya no se importa en LandingPage.tsx. Al reactivarla hay que reponer el import, el onClick y quitar el disabled.
  11. Las URLs de InsForge en el repo hermano hybrid-event-landing (17 en LandingPage.tsx) siguen hardcodeadas — deuda de OTRO repo, confirmada de nuevo, no resuelta.
  12. RELANZAMIENTO-NOVIEMBRE-01 nunca se reverifico contra produccion con diff de hash de bundle (a diferencia de Frente A, que si tuvo esa evidencia).
-  RESUELTO: PDF ya no dice "Registro confirmado" antes de pagar; fecha del evento actualizada en todo el sitio (incluida Ubicacion/DIA_FECHA, via 07b731d); categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero; 8 pagos reales ya con flujo de confirmacion + boleto (manual); 5 tablas huerfanas (orders, products, spectator_tickets, pending_registrations, leads) cerradas y verificadas con la anon key real, ya no exponen datos a anonimos; Meta Pixel + evento Lead instalados y verificados.
+  RESUELTO: PDF ya no dice "Registro confirmado" antes de pagar; fecha del evento actualizada en todo el sitio (incluida Ubicacion/DIA_FECHA, via 07b731d); categoria PRO eliminada de la UI publica; cards de Workout con foto propia por genero; 8 pagos reales ya con flujo de confirmacion + boleto (manual); 5 tablas huerfanas (orders, products, spectator_tickets, pending_registrations, leads) cerradas y verificadas con la anon key real, ya no exponen datos a anonimos; Meta Pixel + evento Lead instalados y verificados; 10 links de Clip regenerados y etapa comercial congelada en 'lanzamiento' (CLIP-RELINK-CONGELA-PRECIOS-01).
 Pending Decisions:
   1. Completar Frente B: persistencia de PDF/QR, campo ticket_sent_at, disparo automatico (trigger/schedule) al marcar 'paid' — hoy es 100% manual via CLI.
-  2. ⚠️ URGENTE (faltan pocos dias al cierre de esta acta): links de Clip vencen funcionalmente el 2026-08-31 (fin de etapa lanzamiento) — pedir a Paulina los links de preventa antes de esa fecha y actualizar clipLinks.ts, o el boton de Clip desaparece solo por el guard.
+  2. RESUELTO (CLIP-RELINK-CONGELA-PRECIOS-01, 2026-09-01): los 10 links de Clip se regeneraron y se congelo la etapa en 'lanzamiento' (ETAPA_CONGELADA). Ya no hay vencimiento por cambio de etapa mientras siga congelado. Si en el futuro se descongela a preventa/regular, hay que volver a regenerar los 10 links de Clip Y revisar los 5 de Mercado Pago con etapas (siguen con monto de lanzamiento).
   3. Cuando abra shop.enforma.mx: reactivar el boton SHOP.
   4. Si se quiere borrar (no solo apagar) el codigo/tabla de Simulacro Pro, o dejarlo togglable.
   5. Centralizar las URLs de InsForge de hybrid-event-landing via VITE_MEDIA_BASE_URL (repo hermano).
@@ -519,7 +545,7 @@ Pending Decisions:
   9. Auditar las 7 edge functions huerfanas del proyecto anterior por el mismo tipo de problema que se encontro en las 5 tablas (autenticacion/exposicion) — no se hizo en SEGURIDAD-TABLAS-HUERFANAS-01, solo se cerraron las tablas.
   10. Meta Conversions API server-side (evento Purchase real al marcar 'paid') — no construido, solo Lead en el cliente. Util si se quiere optimizar campañas de Meta por compras reales, no solo por registros.
 Protected Sources: (none)
-Next Authorized Phase: (ninguna abierta). Lo siguiente probable es avanzar Frente B, actualizar links de Clip antes del 2026-08-31, o verificar el relanzamiento contra produccion.
+Next Authorized Phase: (ninguna abierta). Lo siguiente probable es avanzar Frente B, verificar el relanzamiento contra produccion, o (si negocio lo decide) descongelar precios a preventa — lo que exige regenerar los 10 links de Clip y revisar los 5 de Mercado Pago con etapas.
 Files To Read First: WORKSPACE_STATUS.md, functions/send-payment-confirmation.ts, functions/send-registration-email.ts, src/config/pricingStage.ts, src/data/catalogo.ts, src/config/holdingMode.ts, src/config/simulacroProConfig.ts, src/pages/LandingPage.tsx, src/config/clipLinks.ts, src/config/paymentLinks.ts
 Forbidden Actions: push sin autorizacion expresa; modificar los 10 links de Mercado Pago (los genera el usuario a mano); tocar el flujo de confirmacion por WhatsApp; commitear credenciales; exponer la API key de InsForge en frontend; flipear HOLDING_MODE_ACTIVE o SALES_CONFIG.status sin autorizacion; mover imagenes a public/; usar signed URLs para medios publicos; invocar send-payment-confirmation sin haber confirmado primero metodo/referencia de pago con el usuario
 Media Constraints: vigentes por herencia — ver "Media Constraints" en la historia heredada
