@@ -420,7 +420,7 @@ No se dio por buena la palabra del dashboard: se descargó el bundle que sirve `
 - **Verificación:** invocación real contra producción (no hay entorno de prueba separado para esta función) — `npx @insforge/cli logs function.logs` confirmó `POST send-payment-confirmation 200 956ms`, sin errores. Correo entregado a `ariadnarivero@hotmail.com` vía Resend (id `096e11da-9a5f-4991-aac6-55d2f2b84801`).
 - **⚠️ Incidente y corrección — boleto incompleto en el primer envío:** el payload del primer envío se armó a mano con `participants: [contactName]` en vez de leer el arreglo real `participants` de la fila (columna que sí existe y sí traía dos nombres: `["Erika Ariadna Rivero Pérez", "Erika Mercedes Briseño Nuñez"]` — el segundo es su pareja de Dobles, capturada por el formulario en `InscribirPage.tsx` vía `teammateNames`, ver campo `participants` en el esquema de `hybrid_registro_inscripciones`). El boleto salió con un solo nombre. Detectado al responder una pregunta del usuario sobre dónde se guardan los nombres de acompañantes en Dobles/Relay. **Corregido en el momento:** se consultó `participants` real y se reinvocó la función con el arreglo completo — segundo correo entregado (Resend id `208d7450-b628-4931-8068-583cb48819c5`). Regla anotada en el runbook de abajo para no repetirlo: el campo `participants` del invoke SIEMPRE debe copiarse del `SELECT` real, nunca asumirse desde `contact_name`.
 - **Commit:** `3c5b435` — `feat(payment): add admin-only payment confirmation email with PDF ticket`. Publicado en `origin/main`.
-- **Pagos confirmados con este mecanismo (10 en total, varias tandas del mismo día operativo):**
+- **Pagos confirmados con este mecanismo (11 en total, varias tandas del mismo día operativo):**
 
 | Pago | Referencia | Categoría | Equipo | Monto | Ref. de pago | Resend id |
 |---|---|---|---|---|---|---|
@@ -434,8 +434,9 @@ No se dio por buena la palabra del dashboard: se descargó el bundle que sirve `
 | David Abraham Ramírez Coronado | `a3a4f2d7-be09-4638-8076-c2dbe8674f57` | Individual Hombre (Open) | (sin equipo) | $1,500 MXN | 0045171463 | `3bc3ce41-…` |
 | José Armando Cantú Zazueta + Jorge Luis Estrella Leal | `f64d508e-78ab-460d-abc4-6a164d16c1ef` | Dobles Hombres | (sin equipo) | $2,500 MXN | PjAXosVr (Clip) | `0d5ff992-…` |
 | Cecila Arai Manzano Xool + Maria Concepcion Kuuk Bacab | `9ca6104c-66c7-4c21-b602-5a7d979c2135` | ½ Hybrid Dobles Mixto | Fit House | $1,600 MXN | 0028902321 | `6468434f-…` |
+| Melina Alejandra Gurrutia Mézquita + Natalia Alvarez + Kenyi Miranda + Camila Gutierrez | `43e18522-1323-41a2-bb0c-661fe9ef695d` | Relay 4 Mujeres | Y si si?! | $3,200 MXN | PZt0iLI4 (Clip) | `89578c83-…` |
 
-Los diez localizados por HEX o id completo dado por el usuario, confirmados verbalmente (registro correcto + método de pago) antes de marcar `status='paid'`, con `participants` completo verificado contra la base antes de invocar (regla del incidente, ya aplicada desde el segundo pago en adelante). El noveno pago fue el primero confirmado vía Clip (los ocho anteriores fueron Mercado Pago); la columna se renombró de "Ref. Mercado Pago" a "Ref. de pago" para reflejarlo. Nota del décimo pago: la fila `participants` en la base trae "Xoll" (typo del registrante) mientras que el usuario que reportó el pago escribió "Xool" — se copió tal cual de la base, sin corregir, siguiendo la regla del incidente.
+Los once localizados por HEX o id completo dado por el usuario, confirmados verbalmente (registro correcto + método de pago) antes de marcar `status='paid'`, con `participants` completo verificado contra la base antes de invocar (regla del incidente, ya aplicada desde el segundo pago en adelante). El noveno pago fue el primero confirmado vía Clip (los ocho anteriores fueron Mercado Pago); la columna se renombró de "Ref. Mercado Pago" a "Ref. de pago" para reflejarlo. Nota del décimo pago: la fila `participants` en la base trae "Xoll" (typo del registrante) mientras que el usuario que reportó el pago escribió "Xool" — se copió tal cual de la base, sin corregir, siguiendo la regla del incidente.
 - **Next Authorized Phase:** (ninguna abierta). Completar Frente B (persistencia, disparo automático, control de duplicados) sigue como trabajo futuro — ver Pending Decisions.
 
 ## Fase META-PIXEL-01 (2026-08-27) — CERRADA
@@ -542,8 +543,8 @@ Remote: https://github.com/LEANDRO140514/hybrid-registro.git
 Production: hybrid-registro.enforma.mx (Vercel: hybrid-registro @ enforma-c9d3af17)
 Backend: InsForge project "enforma" (https://3e9sriq7.us-east.insforge.app)
 Branch: main
-HEAD: 6d36d7f (working tree CLEAN, synced with origin/main, salvo el propio commit de cierre de esta acta — ver nota al inicio del archivo)
-Last Commits: 6d36d7f docs(workspace): log 1 payment (Clip) — Dobles Hombres, José Armando Cantú Zazueta | 352d2ac docs(workspace): log hero background swap (Red Bull removal) | 900217b fix(hero): swap hero background for the version without the Red Bull banner
+HEAD: a4b8690 (working tree CLEAN, synced with origin/main, salvo el propio commit de cierre de esta acta — ver nota al inicio del archivo)
+Last Commits: a4b8690 docs(workspace): log 1 payment (Mercado Pago) — ½ Hybrid Dobles Mixto, Fit House | 6d36d7f docs(workspace): log 1 payment (Clip) — Dobles Hombres, José Armando Cantú Zazueta | 352d2ac docs(workspace): log hero background swap (Red Bull removal)
 Completed Phases (this repo): PLANB-LANDING-01 | HEX-PRICING-STAGES-01 | HOLDING-PAGE-01 | SIMULACRO-PRO-01 + reordenamiento de itinerario | Arranque de ventas + fix de service worker | PLANB-CLIP-PAYMENT-01 Frente A (DESPLEGADO) | RELANZAMIENTO-NOVIEMBRE-01 (DESPLEGADO) | FRENTE-B-LITE-01 (primera pieza construida, 8 pagos reales procesados) | SEGURIDAD-TABLAS-HUERFANAS-01 (DESPLEGADO) | META-PIXEL-01 (DESPLEGADO) | CLIP-RELINK-CONGELA-PRECIOS-01 (DESPLEGADO) | SEO-GEO-FASE-1-01 (DESPLEGADO) | COPY-MARCA-FASE-2-01 (DESPLEGADO)
 Open Phase: (none). Frente B completo (persistencia, disparo automatico, control de duplicados) sigue sin construir — solo existe su primera pieza (envio manual con PDF).
 Gate: PHASE_COMPLETE
