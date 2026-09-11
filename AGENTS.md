@@ -20,3 +20,37 @@ Key patterns:
 - Reference users with `auth.users(id)`; use `auth.uid()` in RLS policies.
 - For storage uploads, persist both the returned `url` and `key`.
 <!-- INSFORGE:END -->
+
+<!-- SKILLS-LIBRARY:START -->
+## Capability Policy — Algorithmus Skills Library
+
+- [Skills Library](https://github.com/LEANDRO140514/skills-library) es la fuente gobernada de
+  capacidades reutilizables. Doctrina: `docs/SKILLS_PHILOSOPHY.md` del repo.
+- Checkout canónico en esta máquina: `C:\skills-library`. Registro: `C:\skills-library\_INDEX.csv`.
+  Este proyecto **consume** (Modo A: resolución gobernada directa); no copia ni modifica la biblioteca.
+- Usá primero la capacidad ya activa en el runtime (p. ej. las skills InsForge de arriba).
+- Si no alcanza, resolvé por la biblioteca gobernada (`skill-router` → `find-skills`) antes de salir afuera.
+- El discovery externo ocurre sólo tras un miss local real (`not_found` genuino).
+- Las capacidades externas entran como candidatas, nunca como confiables. No instales Skills directamente.
+- Sólo un `not_found` genuino habilita crear una Skill (`skill-creator`).
+- Usá sólo las capacidades que la tarea necesita — nada "por si acaso".
+- Promote y Deploy son aprobaciones separadas. Una copia de runtime nunca es canónica.
+- Si la tarea no necesita una Skill, hacé la tarea.
+
+### Cómo resolver
+
+`./scripts/find-skills.sh <nombre>` / `--query "<texto>"` desde el checkout, en **Git Bash**
+(no PowerShell). Requiere Python 3 — instalado en esta máquina (3.12.10; `python`, `python3` y `py`
+resuelven al intérprete real). Un agente también puede resolver leyendo `_INDEX.csv` directamente y
+aplicando las reglas de abajo.
+
+| status | cuándo | qué hacer |
+|---|---|---|
+| `allow` | `mias` (no `deny`, no `_archivo/`), o `comunidad` con `scan_verdict=allow` | usar / cargar |
+| `review` | `scan_verdict=review` **con** `scan_waiver` no vacío | leer el waiver primero, después usar |
+| `blocked` | ruta bajo `_archivo/`, `deny`, `review` sin waiver, o `comunidad` sin scan | **no usar** → `BLOCKED_BY_GOVERNANCE` (mostrar `razon_archivo` si aplica) |
+| `unindexed` | carpeta en disco sin fila en `_INDEX.csv` | no usable; falta promoción |
+| `not_found` | ningún match de nombre | único status que habilita construir |
+
+`blocked` **no** es `not_found`. Si governance bloquea, pará y reportalo; no busques un atajo.
+<!-- SKILLS-LIBRARY:END -->
