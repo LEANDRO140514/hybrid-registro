@@ -15,6 +15,7 @@ import { getPaymentLinkForProducto } from '../config/paymentLinks'
 import { getClipLinkForProducto } from '../config/clipLinks'
 import { getSupportWhatsAppUrl } from '../config/supportConfig'
 import { trackLead } from '../lib/metaPixel'
+import { isInAppBrowser } from '../lib/inAppBrowser'
 
 type ViewState =
   | { kind: 'form' }
@@ -58,6 +59,30 @@ export default function InscribirPage() {
     () => Array.from({ length: Math.max((producto?.integrantes ?? 1) - 1, 0) }, () => ''),
   )
   const [formError, setFormError] = useState<string | null>(null)
+  const [copiedLink, setCopiedLink] = useState<string | null>(null)
+  const inAppBrowser = isInAppBrowser()
+
+  const handleCopyLink = async (url: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        // Respaldo para navegadores in-app que no exponen la Clipboard API.
+        const textarea = document.createElement('textarea')
+        textarea.value = url
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+      setCopiedLink(url)
+      setTimeout(() => setCopiedLink((prev) => (prev === url ? null : prev)), 2000)
+    } catch {
+      // El link en texto plano sigue visible para copiarlo a mano.
+    }
+  }
 
   if (!producto) {
     return (
@@ -93,23 +118,11 @@ export default function InscribirPage() {
     setTeammateNames((prev) => prev.map((name, i) => (i === index ? value : name)))
   }
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
+  // Separado de handleSubmit para que el botón "Reintentar" de la pantalla de
+  // error pueda repetir el intento sin pasar de nuevo por la validación del
+  // formulario (los datos ya son válidos, el fallo fue de red/backend).
+  const attemptSubmit = async () => {
     setFormError(null)
-
-    if (!contactName.trim() || !contactEmail.trim() || !contactPhone.trim()) {
-      setFormError('Completa nombre, email y teléfono de contacto.')
-      return
-    }
-    if (!EMAIL_PATTERN.test(contactEmail.trim())) {
-      setFormError('Revisa el email de contacto.')
-      return
-    }
-    if (teammatesNeeded > 0 && teammateNames.some((name) => !name.trim())) {
-      setFormError(`Completa el nombre de ${teammatesNeeded === 1 ? 'tu pareja' : 'todos tus compañeros de equipo'}.`)
-      return
-    }
-
     setView({ kind: 'submitting' })
     const registrationId = crypto.randomUUID()
     const participants = [contactName.trim(), ...teammateNames.map((n) => n.trim())]
@@ -153,6 +166,26 @@ export default function InscribirPage() {
       paymentLink: getPaymentLinkForProducto(producto),
       clipPaymentLink: getClipLinkForProducto(producto, etapaActual),
     })
+  }
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    setFormError(null)
+
+    if (!contactName.trim() || !contactEmail.trim() || !contactPhone.trim()) {
+      setFormError('Completa nombre, email y teléfono de contacto.')
+      return
+    }
+    if (!EMAIL_PATTERN.test(contactEmail.trim())) {
+      setFormError('Revisa el email de contacto.')
+      return
+    }
+    if (teammatesNeeded > 0 && teammateNames.some((name) => !name.trim())) {
+      setFormError(`Completa el nombre de ${teammatesNeeded === 1 ? 'tu pareja' : 'todos tus compañeros de equipo'}.`)
+      return
+    }
+
+    await attemptSubmit()
   }
 
   if (view.kind === 'done') {
@@ -231,6 +264,11 @@ export default function InscribirPage() {
                 <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
                   Elige cómo pagar:
                 </Typography>
+                {inAppBrowser && (
+                  <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>
+                    Si el botón no abre, copia el link y pégalo en Chrome o Safari.
+                  </Typography>
+                )}
                 <Stack
                   direction={{ xs: 'column', sm: clipLink ? 'row' : 'column' }}
                   spacing={1.5}
@@ -239,8 +277,8 @@ export default function InscribirPage() {
                   <Button
                     component="a"
                     href={paymentLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    target={inAppBrowser ? undefined : '_blank'}
+                    rel={inAppBrowser ? undefined : 'noopener noreferrer'}
                     variant="outlined"
                     color="primary"
                     size="large"
@@ -251,14 +289,34 @@ export default function InscribirPage() {
                     <Button
                       component="a"
                       href={clipLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target={inAppBrowser ? undefined : '_blank'}
+                      rel={inAppBrowser ? undefined : 'noopener noreferrer'}
                       variant="outlined"
                       color="primary"
                       size="large"
                     >
                       Pagar con Clip
                     </Button>
+                  )}
+                </Stack>
+                <Stack spacing={0.75} sx={{ width: '100%' }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', wordBreak: 'break-all' }}>
+                      {paymentLink}
+                    </Typography>
+                    <Button size="small" variant="text" onClick={() => void handleCopyLink(paymentLink)} sx={{ minWidth: 'auto', textTransform: 'none' }}>
+                      {copiedLink === paymentLink ? 'Copiado ✓' : 'Copiar'}
+                    </Button>
+                  </Stack>
+                  {clipLink && (
+                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', wordBreak: 'break-all' }}>
+                        {clipLink}
+                      </Typography>
+                      <Button size="small" variant="text" onClick={() => void handleCopyLink(clipLink)} sx={{ minWidth: 'auto', textTransform: 'none' }}>
+                        {copiedLink === clipLink ? 'Copiado ✓' : 'Copiar'}
+                      </Button>
+                    </Stack>
                   )}
                 </Stack>
                 <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
@@ -297,6 +355,52 @@ export default function InscribirPage() {
               </>
             )}
 
+            <Button component={Link} to="/" sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none' }}>
+              Volver al inicio
+            </Button>
+          </Stack>
+        </Container>
+      </Box>
+    )
+  }
+
+  if (view.kind === 'error') {
+    // Nunca dejamos al usuario colgado en "submitting": todo fallo de
+    // submitInscripcion aterriza aquí con una salida clara — reintentar sin
+    // perder sus datos, o escribir por WhatsApp si el reintento también falla.
+    const errorWhatsappUrl = getSupportWhatsAppUrl(
+      `Hola, intenté registrarme para ${producto.nombre} pero tuve un error al guardar mi registro. ¿Me ayudan?`,
+    )
+
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: '#000', color: '#fff', display: 'flex', alignItems: 'center', py: { xs: 8, md: 12 } }}>
+        <RouteMetadata
+          title="No pudimos guardar tu registro | HYBRID EXPERIENCE"
+          description="Ocurrió un error al guardar tu registro para HYBRID EXPERIENCE."
+          path="/inscribir"
+        />
+        <Container maxWidth="sm">
+          <Stack spacing={3} sx={{ alignItems: 'center', textAlign: 'center' }}>
+            <Typography
+              component="p"
+              sx={{ color: 'error.main', fontSize: '0.75rem', fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' }}
+            >
+              No pudimos guardar tu registro
+            </Typography>
+            <Typography component="h1" variant="h5" sx={{ fontWeight: 900 }}>
+              {producto.nombre}
+            </Typography>
+            <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
+              {view.message}
+            </Typography>
+            <Button onClick={() => void attemptSubmit()} variant="contained" color="primary" size="large">
+              Reintentar
+            </Button>
+            {errorWhatsappUrl && (
+              <Button component="a" href={errorWhatsappUrl} target="_blank" rel="noopener noreferrer" variant="outlined" size="large">
+                Escribir por WhatsApp
+              </Button>
+            )}
             <Button component={Link} to="/" sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none' }}>
               Volver al inicio
             </Button>
@@ -389,11 +493,6 @@ export default function InscribirPage() {
               {formError && (
                 <Typography role="alert" sx={{ color: 'error.main', fontSize: '0.85rem' }}>
                   {formError}
-                </Typography>
-              )}
-              {view.kind === 'error' && (
-                <Typography role="alert" sx={{ color: 'error.main', fontSize: '0.85rem' }}>
-                  {view.message}
                 </Typography>
               )}
 

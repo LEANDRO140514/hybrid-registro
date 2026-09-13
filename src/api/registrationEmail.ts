@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/react'
+
 // PLANB-CLIP-PAYMENT-01: este correo se manda al registrar, ANTES de que
 // exista un pago — por eso ya no lleva QR ni PDF. Entregar un boleto aquí
 // implicaba dar por confirmado un lugar que todavía no se pagó. El boleto
@@ -24,7 +26,9 @@ export async function sendRegistrationEmail(input: RegistrationEmailInput): Prom
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     })
-  } catch {
-    // Swallowed on purpose — see comment above.
+  } catch (err) {
+    // Swallowed on purpose — see comment above — pero reportado a Sentry para
+    // poder ver cuántos correos de registro se están perdiendo en silencio.
+    Sentry.captureException(err, { tags: { flow: 'sendRegistrationEmail' } })
   }
 }
