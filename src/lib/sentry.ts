@@ -17,6 +17,7 @@ if (dsn) {
       /window\.webkit\.messageHandlers/,
       'sendDataToNative',
       'sendPageHideMessage',
+      /Error invoking postMessage: Java object is gone/,
       // Falla conocida entre el propio tracing de Sentry (browserTracingIntegration,
       // que usa performance.mark/measure) y ciertos navegadores Chromium/Electron —
       // no tiene relación con el código de la app.
