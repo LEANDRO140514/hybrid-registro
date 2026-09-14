@@ -7,6 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registro manual en src/main.tsx (con `.catch()` hacia Sentry) en vez
+      // del script que este plugin inyecta por defecto: ese script no
+      // atrapa el rechazo de `register()`, así que en navegadores que
+      // bloquean/rompen el Service Worker (in-app browsers como TikTok,
+      // Safari viejo) el error queda "unhandled" — ver issue de Sentry
+      // "AbortError: Failed to register a ServiceWorker".
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
         name: 'The Hybrid Experience',

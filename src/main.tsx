@@ -9,6 +9,20 @@ import { theme } from './theme'
 import { routeTree } from './routeTree.gen'
 import NotFoundPage from './pages/NotFoundPage'
 
+// Registro manual (en vez del script que vite-plugin-pwa inyectaría por
+// defecto) para poder atrapar el rechazo: algunos navegadores in-app
+// (TikTok, Instagram) y versiones viejas de Safari bloquean o rompen el
+// Service Worker y `register()` rechaza. El sitio funciona igual sin él
+// (solo se pierde precache offline), así que el fallo no debe ser un error
+// no manejado — se reporta a Sentry como dato, no como crash.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+      Sentry.captureException(err, { tags: { flow: 'registerServiceWorker' } })
+    })
+  })
+}
+
 const router = createRouter({ routeTree, defaultNotFoundComponent: NotFoundPage })
 
 declare module '@tanstack/react-router' {
