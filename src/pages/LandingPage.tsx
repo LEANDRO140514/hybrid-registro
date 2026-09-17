@@ -26,7 +26,6 @@ import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
-import BoltIcon from '@mui/icons-material/Bolt'
 import InstagramIcon from '@mui/icons-material/Instagram'
 import { useCountdown } from '../hooks/useCountdown'
 import { CATALOGO, porBloque, formatPrecio, getPrecioParaEtapa } from '../data/catalogo'
@@ -47,7 +46,6 @@ const DIA_COMPITO_ROWS = [
   { formato: 'Dobles', cuando: 'Viernes Vespertino (Mujeres) · Sábado Día completo (Hombres y Mixto)' },
   { formato: 'Individual (Open)', cuando: 'Viernes Vespertino' },
   { formato: '½ Hybrid', cuando: 'Sábado Día completo' },
-  { formato: 'Workout Experience', cuando: 'Sábado Día completo' },
   { formato: 'Relay', cuando: 'Domingo Matutino' },
 ]
 
@@ -119,7 +117,7 @@ const FAQ_DATA: FaqItem[] = [
   {
     question: '¿Nunca he competido, puedo participar?',
     answer:
-      'Sí. Empieza con el Workout Experience (para probar) o el ½ Hybrid (para competir con volumen accesible). Ninguno de los dos requiere experiencia previa.',
+      'Sí. Empieza con el ½ Hybrid: usa las mismas estaciones del formato oficial con volumen accesible, y no requiere experiencia previa.',
   },
   {
     question: '¿Qué diferencia hay entre ½ Hybrid y el formato completo?',
@@ -427,10 +425,10 @@ const TRES_DIAS: TresDiasItem[] = [
     sesion: 'Día completo',
     titulo: 'El día más abierto',
     texto:
-      'Dobles Hombres y Mixto, debuta el ½ Hybrid, y quien nunca ha competido puede tomar el Workout. Día completo, abierto a todos los niveles.',
+      'Dobles Hombres y Mixto, y debuta el ½ Hybrid. Día completo, abierto a todos los niveles.',
     links: [
       { label: 'Ver Dobles', href: '#compite-sab-dia-dobles' },
-      { label: 'Ver ½ Hybrid y Workout', href: '#experience' },
+      { label: 'Ver ½ Hybrid', href: '#experience' },
     ],
   },
   {
@@ -677,9 +675,7 @@ function groupProductos(productos: Producto[]): ProductoGroup[] {
 
 const COMPITE_GROUPS = groupProductos(porBloque('COMPITE'))
 const HALF_HYBRID_PRODUCTS = CATALOGO.filter((p) => p.tipo === '½ Hybrid Individual' || p.tipo === '½ Hybrid Dobles')
-const WORKOUT_PRODUCTS = CATALOGO.filter((p) => p.tipo === 'Workout Experience')
 const PUBLICO_PRODUCTS = CATALOGO.filter((p) => p.tipo === 'Público')
-const FOTOGRAFO_PRODUCTS = CATALOGO.filter((p) => p.tipo === 'Fotógrafo')
 
 // ── Precios por etapa: un producto representativo por categoría ────
 // (los productos hermanos de la misma categoría comparten precio, ver catalogo.ts)
@@ -1214,8 +1210,8 @@ interface AccesoConceptual {
 
 const ACCESOS: AccesoConceptual[] = [
   { titulo: 'QUIERO COMPETIR', subtitulo: 'Individual · Dobles · Relay', href: '#compite', color: '#E6F2B1' },
-  { titulo: 'QUIERO EMPEZAR', subtitulo: 'Workout Experience · ½ Hybrid', href: '#experience', color: '#E6F2B1' },
-  { titulo: 'QUIERO ASISTIR', subtitulo: 'Público · Fotógrafo', href: '#asiste', color: '#E9C7DF' },
+  { titulo: 'QUIERO EMPEZAR', subtitulo: '½ Hybrid', href: '#experience', color: '#E6F2B1' },
+  { titulo: 'QUIERO ASISTIR', subtitulo: 'Público', href: '#asiste', color: '#E9C7DF' },
 ]
 
 function EligeTuExperiencia() {
@@ -1459,26 +1455,9 @@ export default function LandingPage() {
           <CountdownUnit value={timeLeft.seconds} label="Seg" />
         </Stack>
 
-        <Button
-          component="a"
-          href="#elige-tu-experiencia"
-          variant="contained"
-          color="primary"
-          size="large"
-          sx={{
-            px: 5,
-            py: 1.5,
-            fontSize: { xs: '1rem', sm: '1.1rem' },
-            mb: 3,
-            '&:focus-visible': { outline: '3px solid #E6F2B1', outlineOffset: 3 },
-          }}
-        >
-          Elige tu experiencia
-        </Button>
-
         <Typography
           variant="body2"
-          sx={{ color: 'text.secondary', letterSpacing: '0.15em', textTransform: 'uppercase' }}
+          sx={{ color: 'text.secondary', letterSpacing: '0.15em', textTransform: 'uppercase', mt: 3 }}
         >
           13-15 NOVIEMBRE 2026
         </Typography>
@@ -1520,7 +1499,7 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            Individual, Dobles o Relay. O te asomas con Workout Experience y ½ Hybrid. La
+            Individual, Dobles o Relay. O te asomas con el ½ Hybrid. La
             comunidad es el formato.
           </Typography>
         </Stack>
@@ -1596,11 +1575,10 @@ export default function LandingPage() {
           </Typography>
           <Grid container spacing={2}>
             {[
-              { label: 'Workout', desc: 'Probar el deporte, sin cronómetro.', href: '#experience' },
               { label: '½ Hybrid', desc: 'Competir de verdad, volumen accesible.', href: '#experience' },
               { label: 'Hybrid completo', desc: 'El reto real. Individual, Dobles o Relay.', href: '#compite' },
             ].map((nivel) => (
-              <Grid size={{ xs: 12, sm: 4 }} key={nivel.label}>
+              <Grid size={{ xs: 12, sm: 6 }} key={nivel.label}>
                 <Box
                   component="a"
                   href={nivel.href}
@@ -1666,94 +1644,7 @@ export default function LandingPage() {
             quien quiere hacerlo de verdad, en volumen accesible.
           </Typography>
 
-          {/* B) Workout Experience — conversion product, most prominent treatment */}
-          <Box
-            sx={{
-              mb: { xs: 6, md: 8 },
-              p: { xs: 3, sm: 4, md: 5 },
-              border: '2px solid #E6F2B1',
-              position: 'relative',
-              background:
-                'linear-gradient(135deg, rgba(230,242,177,0.1) 0%, rgba(0,0,0,0.5) 100%)',
-              boxShadow: '0 0 40px rgba(230,242,177,0.08)',
-            }}
-          >
-            <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-              <CornerBrackets size={16} />
-            </Box>
-            <Chip
-              icon={<BoltIcon sx={{ fontSize: '1rem !important', color: '#000000 !important' }} />}
-              label="EMPIEZA AQUÍ"
-              sx={{
-                mb: 2,
-                bgcolor: '#E6F2B1',
-                color: '#000000',
-                fontWeight: 900,
-                fontSize: '0.7rem',
-                letterSpacing: '0.1em',
-                borderRadius: 0,
-              }}
-            />
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                gap: { xs: 4, md: 6 },
-                alignItems: { md: 'center' },
-              }}
-            >
-              <Box sx={{ flex: 1.2 }}>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 900,
-                    color: '#E6F2B1',
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    letterSpacing: '0.01em',
-                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.3rem' },
-                    mb: 1,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Conoce el deporte híbrido: haz el workout
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: '#E6F2B1',
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    fontSize: '0.8rem',
-                    mb: 2,
-                    fontFamily: "'Space Grotesk', sans-serif",
-                  }}
-                >
-                  Sábado 14 · Día completo · {formatPrecio(350)}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'text.secondary',
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    lineHeight: 1.8,
-                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                  }}
-                >
-                  {FORMATO_DESCRIPCIONES['Workout Experience']}
-                </Typography>
-              </Box>
-              <Grid container spacing={2} sx={{ flex: 1, justifyContent: 'center' }}>
-                {WORKOUT_PRODUCTS.map((producto) => (
-                  <Grid size={{ xs: 6 }} key={producto.code}>
-                    <ProductCard producto={producto} etapaActual={etapaActual} />
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Box>
-
-          {/* A) ½ Hybrid */}
+          {/* ½ Hybrid */}
           <Box>
             <Typography
               variant="h4"
@@ -2471,21 +2362,9 @@ export default function LandingPage() {
           >
             EXPERIENCE
           </Typography>
-          <Box sx={{ overflowX: 'auto', mb: 1.5 }}>
+          <Box sx={{ overflowX: 'auto', mb: 5 }}>
             <PricingStageTable rows={EXPERIENCE_PRICING_REPS} accentColor="#E9C7DF" />
           </Box>
-          <Typography
-            variant="body2"
-            sx={{
-              textAlign: 'center',
-              color: 'text.secondary',
-              fontSize: '0.85rem',
-              mb: 5,
-              fontFamily: "'Space Grotesk', sans-serif",
-            }}
-          >
-            {`Workout Experience: ${formatPrecio(350)} — precio único durante todas las etapas, sin 3 MSI.`}
-          </Typography>
 
           <Typography
             variant="body2"
@@ -2685,7 +2564,7 @@ export default function LandingPage() {
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            ½ Hybrid y Workout: reconocimiento y kit para todos los participantes.
+            ½ Hybrid: reconocimiento y kit para todos los participantes.
           </Typography>
 
           {/* DOMINGO */}
@@ -2741,7 +2620,7 @@ export default function LandingPage() {
           </Typography>
 
           {/* Público */}
-          <Box sx={{ mb: { xs: 6, md: 7 } }}>
+          <Box>
             <Typography
               variant="overline"
               sx={{
@@ -2771,44 +2650,6 @@ export default function LandingPage() {
             </Typography>
             <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
               {PUBLICO_PRODUCTS.map((producto) => (
-                <Grid size={{ xs: 6, sm: 3 }} key={producto.code}>
-                  <ProductCard producto={producto} etapaActual={etapaActual} accentColor="#E9C7DF" />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
-          {/* Fotógrafo */}
-          <Box>
-            <Typography
-              variant="overline"
-              sx={{
-                display: 'block',
-                textAlign: 'center',
-                color: '#E9C7DF',
-                fontWeight: 700,
-                letterSpacing: '0.15em',
-                fontSize: '0.75rem',
-                mb: 0.5,
-                fontFamily: "'Space Grotesk', sans-serif",
-              }}
-            >
-              {`FOTÓGRAFO · ${formatPrecio(350)} POR DÍA`}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                textAlign: 'center',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: '0.8rem',
-                mb: 2.5,
-                fontFamily: "'Space Grotesk', sans-serif",
-              }}
-            >
-              Acreditación para fotógrafos externos.
-            </Typography>
-            <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
-              {FOTOGRAFO_PRODUCTS.map((producto) => (
                 <Grid size={{ xs: 6, sm: 3 }} key={producto.code}>
                   <ProductCard producto={producto} etapaActual={etapaActual} accentColor="#E9C7DF" />
                 </Grid>
@@ -3745,16 +3586,18 @@ export default function LandingPage() {
         href="#elige-tu-experiencia"
         sx={{
           position: 'fixed',
-          bottom: 24,
-          right: 24,
+          bottom: 16,
+          right: 16,
           zIndex: 1200,
           bgcolor: '#E6F2B1',
           color: '#000000',
           fontFamily: 'tt-norms-pro-extra-black-italic, sans-serif',
-          fontSize: '0.9rem',
-          letterSpacing: '-0.01em',
-          px: 2.5,
-          py: 1.5,
+          fontSize: '0.65rem',
+          lineHeight: 1.3,
+          letterSpacing: '0.01em',
+          px: 1.5,
+          py: 1,
+          maxWidth: 150,
           cursor: 'pointer',
           textDecoration: 'none',
           border: '2px solid #E6F2B1',
@@ -3776,15 +3619,14 @@ export default function LandingPage() {
             outline: '3px solid #FFFFFF',
             outlineOffset: 3,
           },
-          display: { xs: 'flex', sm: 'flex' },
+          display: 'flex',
           alignItems: 'center',
-          gap: 1,
+          gap: 0.75,
           textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
         }}
       >
-        <Box sx={{ fontSize: '1.2rem', lineHeight: 1 }}>🏆</Box>
-        Elige tu experiencia
+        <Box sx={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>🏆</Box>
+        Selecciona tu nivel: ½ Hybrid, Open, Asiste
       </Box>
     </Box>
   )
