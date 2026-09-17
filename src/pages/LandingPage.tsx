@@ -3620,13 +3620,18 @@ export default function LandingPage() {
             outlineOffset: 3,
           },
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           gap: 0.75,
           textTransform: 'uppercase',
         }}
       >
-        <Box sx={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>🏆</Box>
-        Selecciona tu nivel: ½ Hybrid, Open, Asiste
+        <Box sx={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0, mt: 0.1 }}>🏆</Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.15 }}>
+          <Box>Selecciona tu nivel:</Box>
+          <Box>· ½ Hybrid</Box>
+          <Box>· Open</Box>
+          <Box>· Asiste</Box>
+        </Box>
       </Box>
     </Box>
   )
