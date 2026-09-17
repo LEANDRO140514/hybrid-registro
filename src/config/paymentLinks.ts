@@ -40,12 +40,15 @@ export function getPaymentGroupKey(producto: Producto): PaymentGroupKey {
 }
 
 export const PAYMENT_LINKS_BY_GROUP: Record<PaymentGroupKey, string | null> = {
-  // 3 MSI — regenerados para HEX-PRICING-STAGES-01 (precio de etapa "lanzamiento")
+  // Regenerados el 2026-09-16: los anteriores expiraron del lado de Mercado
+  // Pago (mostraban "Lo que querías pagar ya no está disponible") y varios
+  // registros quedaron atorados sin poder pagar. Verificar monto/concepto
+  // cada vez que se regeneren — Mercado Pago no avisa cuándo vencen.
   DOBLES: 'https://mpago.li/11GKwpC',
-  RELAY: 'https://mpago.li/19uewoa',
-  HALF_DOBLES: 'https://mpago.li/2AJspLC',
-  INDIVIDUAL: 'https://mpago.li/2zPb2NR',
-  HALF_INDIVIDUAL: 'https://mpago.li/167XRtU',
+  RELAY: 'https://mpago.li/2iDqVaf',
+  HALF_DOBLES: 'https://mpago.li/14K9nhv',
+  INDIVIDUAL: 'https://mpago.li/1wMbEj7',
+  HALF_INDIVIDUAL: 'https://mpago.li/2ePoSmT',
   // Precio fijo, sin cambio entre etapas — links originales
   WORKOUT: 'https://mpago.la/1sf1rQb',
   PUB_1D: 'https://mpago.la/1vSSuK1',
