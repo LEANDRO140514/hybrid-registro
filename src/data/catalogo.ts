@@ -40,10 +40,11 @@ export const CATALOGO: Producto[] = [
   { code: 'DOB-SAB-HH', nombre: 'Dobles Hombres',  bloque: 'COMPITE', tipo: 'Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 2500, preventa: 2750, regular: 3000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
   { code: 'DOB-SAB-MH', nombre: 'Dobles Mixto',    bloque: 'COMPITE', tipo: 'Dobles', integrantes: 2, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 2500, preventa: 2750, regular: 3000 }, msi: true, precioUnidad: 'por pareja', incluyeChip: true },
 
-  // ── COMPITE — Domingo 15 · AM · Relay (4 personas), cierre del evento ──
-  { code: 'REL-4H',   nombre: 'Relay 4 Hombres',    bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Domingo', sesion: 'AM', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
-  { code: 'REL-4M',   nombre: 'Relay 4 Mujeres',    bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Domingo', sesion: 'AM', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
-  { code: 'REL-2H2M', nombre: 'Relay Mixto 2H+2M',  bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Domingo', sesion: 'AM', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
+  // ── COMPITE — Sábado 14 · Día completo · Relay (4 personas), cierre del evento ──
+  // Antes Domingo 15 · AM: el evento cierra el sábado, ya no hay domingo.
+  { code: 'REL-4H',   nombre: 'Relay 4 Hombres',    bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
+  { code: 'REL-4M',   nombre: 'Relay 4 Mujeres',    bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
+  { code: 'REL-2H2M', nombre: 'Relay Mixto 2H+2M',  bloque: 'COMPITE', tipo: 'Relay', integrantes: 4, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 3200, preventa: 3500, regular: 3800 }, msi: true, precioUnidad: 'por equipo', incluyeChip: true },
 
   // ── EXPERIENCE — ½ Hybrid — Sábado 14 · Día completo ──
   { code: 'HALF-IND-M',  nombre: '½ Hybrid Individual Mujer',    bloque: 'EXPERIENCE', tipo: '½ Hybrid Individual', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: { lanzamiento: 800, preventa: 900, regular: 1000 }, msi: true, precioUnidad: 'por persona', incluyeChip: true },
@@ -56,11 +57,12 @@ export const CATALOGO: Producto[] = [
   { code: 'WOD-M', nombre: 'Workout Experience Mujer',   bloque: 'EXPERIENCE', tipo: 'Workout Experience', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: 350, msi: false, precioUnidad: 'por persona', incluyeChip: false },
   { code: 'WOD-H', nombre: 'Workout Experience Hombre',  bloque: 'EXPERIENCE', tipo: 'Workout Experience', integrantes: 1, dia: 'Sábado', sesion: 'DIA', precios: 350, msi: false, precioUnidad: 'por persona', incluyeChip: false },
 
-  // ── ASISTE — Público · $250 por día / $600 pase 3 días ──
+  // ── ASISTE — Público · $250 por día (solo Viernes y Sábado) ──
+  // Cancelados: PUB-DOM (el evento cierra el sábado) y PUB-3D (pase 3 días).
+  // Quitados del catálogo para que tampoco se puedan comprar por URL directa;
+  // los registros ya guardados en la base conservan su category_code.
   { code: 'PUB-VIE', nombre: 'Público — Viernes',      bloque: 'ASISTE', tipo: 'Público', integrantes: 1, dia: 'Viernes', sesion: 'AM', precios: 250, msi: false, precioUnidad: 'por día', incluyeChip: false },
   { code: 'PUB-SAB', nombre: 'Público — Sábado',       bloque: 'ASISTE', tipo: 'Público', integrantes: 1, dia: 'Sábado',  sesion: 'AM', precios: 250, msi: false, precioUnidad: 'por día', incluyeChip: false },
-  { code: 'PUB-DOM', nombre: 'Público — Domingo',      bloque: 'ASISTE', tipo: 'Público', integrantes: 1, dia: 'Domingo', sesion: 'AM', precios: 250, msi: false, precioUnidad: 'por día', incluyeChip: false },
-  { code: 'PUB-3D',  nombre: 'Público — Pase 3 Días',  bloque: 'ASISTE', tipo: 'Público', integrantes: 1, dia: 'Vie-Dom', sesion: 'AM', precios: 600, msi: false, precioUnidad: 'pase 3 días', incluyeChip: false },
 
   // ── ASISTE — Fotógrafo · $350 por día / $800 pase 3 días ──
   { code: 'FOT-VIE', nombre: 'Fotógrafo — Viernes',    bloque: 'ASISTE', tipo: 'Fotógrafo', integrantes: 1, dia: 'Viernes', sesion: 'AM', precios: 350, msi: false, precioUnidad: 'por día', incluyeChip: false },

@@ -92,8 +92,8 @@ export default function HoldingPage() {
       }}
     >
       <RouteMetadata
-        title="HYBRID EXPERIENCE | Nueva fecha: 13-15 noviembre"
-        description="HYBRID EXPERIENCE 2026 tiene nueva fecha: 13, 14 y 15 de noviembre en Club Cumbres, Mérida. Únete a la Lista HYBRID para acceso prioritario."
+        title="HYBRID EXPERIENCE | Nueva fecha: 13-14 noviembre"
+        description="HYBRID EXPERIENCE 2026 tiene nueva fecha: 13 y 14 de noviembre en Club Cumbres, Mérida. Únete a la Lista HYBRID para acceso prioritario."
         path="/"
       />
       <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
@@ -133,7 +133,7 @@ export default function HoldingPage() {
                 fontSize: { xs: '2rem', sm: '2.6rem' },
               }}
             >
-              13 · 14 · 15 NOVIEMBRE
+              13 · 14 NOVIEMBRE
             </Typography>
             <Typography
               sx={{
@@ -152,7 +152,7 @@ export default function HoldingPage() {
               La comunidad HYBRID EXPERIENCE sigue creciendo y queremos que seas parte de lo que viene.
             </Typography>
             <Typography sx={bodyTextSx}>
-              Nos encontramos este <strong>13, 14 y 15 de noviembre</strong> para vivir tres días de
+              Nos encontramos este <strong>13 y 14 de noviembre</strong> para vivir dos días de
               deporte, reto, energía y comunidad.
             </Typography>
           </Stack>
@@ -217,7 +217,7 @@ export default function HoldingPage() {
                 letterSpacing: '0.05em',
               }}
             >
-              13 · 14 · 15 NOVIEMBRE
+              13 · 14 NOVIEMBRE
             </Typography>
           </Stack>
 
