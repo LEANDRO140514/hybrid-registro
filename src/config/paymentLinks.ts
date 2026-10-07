@@ -51,7 +51,8 @@ export const PAYMENT_LINKS_BY_GROUP: Record<PaymentGroupKey, string | null> = {
   HALF_INDIVIDUAL: 'https://mpago.li/2ePoSmT',
   // Precio fijo, sin cambio entre etapas — links originales
   WORKOUT: 'https://mpago.la/1sf1rQb',
-  PUB_1D: 'https://mpago.la/1vSSuK1',
+  // Regenerado el 2026-10-07: el original (1vSSuK1) quedó "no está activo".
+  PUB_1D: 'https://mpago.la/1GhsJ99',
   PUB_3D: 'https://mpago.la/1J9EGt1',
   FOT_1D: 'https://mpago.la/1F6NEJz',
   FOT_3D: 'https://mpago.la/1rFvYXm',
