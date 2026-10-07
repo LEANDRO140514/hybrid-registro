@@ -262,7 +262,7 @@ export default function InscribirPage() {
             {paymentLink ? (
               <>
                 <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
-                  Elige cómo pagar:
+                  {clipLink ? 'Elige cómo pagar:' : 'Paga con Mercado Pago:'}
                 </Typography>
                 {inAppBrowser && (
                   <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>
@@ -440,8 +440,10 @@ export default function InscribirPage() {
               </Typography>
               <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', mt: 1 }}>
                 Llena tus datos{producto.integrantes > 1 ? ' y los de tu equipo' : ''}. Al continuar
-                podrás elegir cómo pagar (Mercado Pago o Clip). Recibirás tu boleto una vez validado
-                el pago.
+                {getClipLinkForProducto(producto, etapaActual)
+                  ? ' podrás elegir cómo pagar (Mercado Pago o Clip).'
+                  : ' verás tu link de pago de Mercado Pago.'}{' '}
+                Recibirás tu boleto una vez validado el pago.
               </Typography>
             </Stack>
 
