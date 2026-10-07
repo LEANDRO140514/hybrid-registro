@@ -409,7 +409,7 @@ interface DiaEventoItem {
   links: { label: string; href: string }[]
 }
 
-const DOS_DIAS: DiaEventoItem[] = [
+const DIAS_EVENTO: DiaEventoItem[] = [
   {
     fecha: 'VIERNES 13',
     sesion: 'Vespertino',
@@ -431,6 +431,13 @@ const DOS_DIAS: DiaEventoItem[] = [
       { label: 'Ver Relay', href: '#compite-sab-dia-relay' },
       { label: 'Ver ½ Hybrid', href: '#experience' },
     ],
+  },
+  {
+    fecha: 'DOMINGO 15',
+    sesion: 'Por anunciar',
+    titulo: 'Por anunciar',
+    texto: 'Día reservado para actividades especiales. Los detalles se anunciarán en este sitio.',
+    links: [],
   },
 ]
 
@@ -1188,7 +1195,7 @@ function OrganizerStrip() {
           textTransform: 'uppercase',
         }}
       >
-        Organizado por ENFORMA Sports Society · 13 y 14 de noviembre de 2026
+        Organizado por ENFORMA Sports Society · 13, 14 y 15 de noviembre de 2026
       </Typography>
     </Box>
   )
@@ -1453,7 +1460,7 @@ export default function LandingPage() {
           variant="body2"
           sx={{ color: 'text.secondary', letterSpacing: '0.15em', textTransform: 'uppercase', mt: 3 }}
         >
-          13-14 NOVIEMBRE 2026
+          13-15 NOVIEMBRE 2026
         </Typography>
       </Box>
 
@@ -2160,7 +2167,7 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* ===== DOS DÍAS (TIMELINE) ===== */}
+      {/* ===== LOS DÍAS (TIMELINE) ===== */}
       <Box
         sx={{
           py: { xs: 8, md: 12 },
@@ -2168,7 +2175,7 @@ export default function LandingPage() {
         }}
       >
         <Container maxWidth="md">
-          <SectionHeading label="DOS DÍAS" />
+          <SectionHeading label="LOS DÍAS" />
           <Typography
             variant="body1"
             sx={{
@@ -2184,7 +2191,7 @@ export default function LandingPage() {
           </Typography>
 
           <Stack spacing={0}>
-            {DOS_DIAS.map((dia, i) => (
+            {DIAS_EVENTO.map((dia, i) => (
               <Box
                 key={dia.titulo}
                 sx={{
@@ -2741,7 +2748,7 @@ export default function LandingPage() {
                   mb: 2,
                 }}
               >
-                13-14 NOV
+                13-15 NOV
               </Typography>
 
               {/* Venue name */}
